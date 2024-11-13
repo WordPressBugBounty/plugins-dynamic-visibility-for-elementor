@@ -3,17 +3,6 @@ namespace DynamicVisibilityForElementor;
 
 trait Image {
 
-	public static function get_thumbnail_sizes() {
-		$sizes = get_intermediate_image_sizes();
-		$ret = [];
-
-		foreach ( $sizes as $s ) {
-			$ret[ $s ] = $s;
-		}
-
-		return $ret;
-	}
-
 	public static function is_resized_image( $imagePath ) {
 		$ext = pathinfo( $imagePath, PATHINFO_EXTENSION );
 		$pezzi = explode( '-', substr( $imagePath, 0, -( strlen( $ext ) + 1 ) ) );
@@ -32,9 +21,10 @@ trait Image {
 
 	public static function get_image_id( $image_url ) {
 		global $wpdb;
-		$sql = $wpdb->prepare( "SELECT ID FROM {$wpdb->prefix}posts WHERE post_type LIKE 'attachment' AND guid LIKE %s;",
+		$sql = $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'attachment' AND guid LIKE %s;",
 			'%' . $wpdb->esc_like( $image_url ) . '%'
 		);
+
 		$attachment = $wpdb->get_col( $sql );
 		$img_id = reset( $attachment );
 		if ( ! $img_id ) {
@@ -53,6 +43,9 @@ trait Image {
 	 * @return string
 	 */
 	public static function get_image_alt( int $attachment_ID ) {
+		if ( ! get_post( $attachment_ID ) ) {
+			return '';
+		}
 		$alt = get_post_meta( $attachment_ID, '_wp_attachment_image_alt', true );
 		if ( ! empty( $alt ) ) {
 			return esc_attr( strip_tags( $alt ) );
@@ -60,13 +53,14 @@ trait Image {
 		return '';
 	}
 
+
 	/**
-	 * Get Attachment
+	 * Get Image Attachment
 	 *
 	 * @param string|int $attachment_id
 	 * @return array<string,mixed>|null
 	 */
-	public static function get_attachment( $attachment_id ) {
+	public static function get_image_attachment( $attachment_id ) {
 		$attachment_id = intval( $attachment_id ); // phpstan
 		if ( ! $attachment_id ) {
 			return null;
@@ -74,6 +68,14 @@ trait Image {
 
 		$attachment = get_post( $attachment_id );
 		if ( ! $attachment || 'attachment' !== $attachment->post_type ) {
+			return null;
+		}
+
+		if ( ! current_user_can( 'read_post', $attachment_id ) ) {
+			return null;
+		}
+
+		if ( ! wp_attachment_is_image( $attachment_id ) ) {
 			return null;
 		}
 
@@ -87,12 +89,12 @@ trait Image {
 			'alt' => esc_attr( get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ) ),
 			'caption' => wp_kses_post( $attachment->post_excerpt ),
 			'description' => wp_kses_post( $attachment->post_content ),
-			'href' => get_attachment_link( $attachment_id ),
-			'src' => $img_src[0],
+			'href' => esc_url( get_attachment_link( $attachment_id ) ),
+			'src' => esc_url( $img_src[0] ),
 			'title' => esc_html( $attachment->post_title ),
-			'url' => $img_src[0],
-			'width' => $img_src[1],
-			'height' => $img_src[2],
+			'url' => esc_url( $img_src[0] ),
+			'width' => intval( $img_src[1] ),
+			'height' => intval( $img_src[2] ),
 		];
 	}
 }

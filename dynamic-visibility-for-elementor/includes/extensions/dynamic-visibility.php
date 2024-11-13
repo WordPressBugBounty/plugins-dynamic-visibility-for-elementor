@@ -655,6 +655,9 @@ class DynamicVisibility extends ExtensionPrototype {
 			if ( in_array( $element_type, $this->page_target_elements, true ) ) {
 				unset( $_triggers['events'] );
 			}
+			if ( ! Helper::is_myfastapp_active() ) {
+				unset( $_triggers['myfastapp'] );
+			}
 			$element->add_control(
 				'dce_visibility_triggers',
 				[
@@ -1319,6 +1322,9 @@ class DynamicVisibility extends ExtensionPrototype {
 					'placeholder' => esc_html__( 'Post Title', 'dynamic-visibility-for-elementor' ),
 					'label_block' => true,
 					'query_type' => 'posts',
+					'dynamic' => [
+						'active' => false,
+					],
 					'multiple' => true,
 					'separator' => 'before',
 				]
@@ -1670,12 +1676,12 @@ class DynamicVisibility extends ExtensionPrototype {
 				}
 			} else {
 				$element->add_control(
-				'dce_visibility_woo_notice',
-				[
-					'type' => Controls_Manager::RAW_HTML,
-					'raw' => esc_html__( 'You need WooCommerce to use this trigger.', 'dynamic-visibility-for-elementor' ),
-					'content_classes' => 'elementor-panel-alert elementor-panel-alert-warning',
-				]
+					'dce_visibility_woo_notice',
+					[
+						'type' => Controls_Manager::RAW_HTML,
+						'raw' => esc_html__( 'You need WooCommerce to use this trigger.', 'dynamic-visibility-for-elementor' ),
+						'content_classes' => 'elementor-panel-alert elementor-panel-alert-warning',
+					]
 				);
 			}
 		}
@@ -1691,26 +1697,17 @@ class DynamicVisibility extends ExtensionPrototype {
 					]
 				);
 			} elseif ( Helper::is_myfastapp_active() ) {
-					$element->add_control(
-						'dce_visibility_myfastapp',
-						[
-							'label' => esc_html__( 'The visitor is', 'dynamic-visibility-for-elementor' ),
-							'type' => Controls_Manager::SELECT,
-							'options' => [
-								'all' => esc_html__( 'on the site or in the app', 'dynamic-visibility-for-elementor' ),
-								'site' => esc_html__( 'on the site', 'dynamic-visibility-for-elementor' ),
-								'app' => esc_html__( 'in the app', 'dynamic-visibility-for-elementor' ),
-							],
-							'default' => 'all',
-						]
-					);
-			} else {
 				$element->add_control(
-					'dce_visibility_myfastapp_notice',
+					'dce_visibility_myfastapp',
 					[
-						'type' => Controls_Manager::RAW_HTML,
-						'raw' => esc_html__( 'You need My FastAPP to use this trigger.', 'dynamic-visibility-for-elementor' ),
-						'content_classes' => 'elementor-panel-alert elementor-panel-alert-warning',
+						'label' => esc_html__( 'The visitor is', 'dynamic-visibility-for-elementor' ),
+						'type' => Controls_Manager::SELECT,
+						'options' => [
+							'all' => esc_html__( 'on the site or in the app', 'dynamic-visibility-for-elementor' ),
+							'site' => esc_html__( 'on the site', 'dynamic-visibility-for-elementor' ),
+							'app' => esc_html__( 'in the app', 'dynamic-visibility-for-elementor' ),
+						],
+						'default' => 'all',
 					]
 				);
 			}
@@ -2616,7 +2613,7 @@ class DynamicVisibility extends ExtensionPrototype {
 						$ips = explode( ',', $settings['dce_visibility_ip'] );
 						$ips = array_map( 'trim', $ips );
 						++$triggers_n;
-						if ( in_array( $_SERVER['REMOTE_ADDR'], $ips ) ) {
+						if ( isset( $_SERVER['REMOTE_ADDR'] ) && in_array( $_SERVER['REMOTE_ADDR'], $ips ) ) {
 							$conditions['dce_visibility_ip'] = esc_html__( 'Remote IP', 'dynamic-visibility-for-elementor' );
 						}
 					}

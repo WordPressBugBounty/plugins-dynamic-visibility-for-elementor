@@ -230,14 +230,15 @@ trait Elementor {
 		}
 		return false;
 	}
-
+	
 	public static function set_all_settings_by_id( $element_id = null, $settings = array(), $post_id = null ) {
 		if ( ! $post_id ) {
 			$post_id = get_the_ID();
-			if ( ! $post_id ) {
+			if ( ! $post_id && isset( $_GET['post'] ) ) {
 				$post_id = intval( $_GET['post'] );
 			}
 		}
+	
 		$post_meta = self::get_settings_by_id( null, $post_id );
 		if ( $element_id ) {
 			$keys_array = self::array_find_deep( $post_meta, $element_id );
@@ -246,22 +247,20 @@ trait Elementor {
 				$keys_array[ $tmp_key ] = 'settings';
 			}
 			$post_meta = Helper::set_array_value_by_keys( is_array( $post_meta ) ? $post_meta : [], $keys_array, $settings );
-			array_walk_recursive($post_meta, function ( $v, $k ) {
-				$v = self::escape_json_string( $v );
-			});
 		}
+	
 		$post_meta_prepared = wp_json_encode( $post_meta );
-		$post_meta_prepared = wp_slash( $post_meta_prepared );
 		update_metadata( 'post', $post_id, '_elementor_data', $post_meta_prepared );
 	}
-
+	
 	public static function set_settings_by_id( $element_id, $key, $value = null, $post_id = null ) {
 		if ( ! $post_id ) {
 			$post_id = get_the_ID();
-			if ( ! $post_id ) {
+			if ( ! $post_id && isset( $_GET['post'] ) ) {
 				$post_id = intval( $_GET['post'] );
 			}
 		}
+	
 		$post_meta = self::get_elementor_data( $post_id );
 		$keys_array = self::array_find_deep( $post_meta, $element_id );
 		if ( ! empty( $keys_array ) ) {
@@ -272,28 +271,11 @@ trait Elementor {
 			}
 			$keys_array[] = $key;
 			$post_meta = Helper::set_array_value_by_keys( is_array( $post_meta ) ? $post_meta : [], $keys_array, $value );
-			array_walk_recursive($post_meta, function ( $v, $k ) {
-				$v = self::escape_json_string( $v );
-			});
+	
 			$post_meta_prepared = wp_json_encode( $post_meta );
-			$post_meta_prepared = wp_slash( $post_meta_prepared );
 			update_metadata( 'post', $post_id, '_elementor_data', $post_meta_prepared );
 		}
 		return $post_id;
-	}
-
-	public static function set_dynamic_tag( $editor_data ) {
-		if ( is_array( $editor_data ) ) {
-			foreach ( $editor_data as $key => $avalue ) {
-				$editor_data[ $key ] = self::set_dynamic_tag( $avalue );
-			}
-			if ( isset( $editor_data['elType'] ) ) {
-				foreach ( $editor_data['settings'] as $skey => $avalue ) {
-					$editor_data['settings'][ \Elementor\Core\DynamicTags\Manager::DYNAMIC_SETTING_KEY ][ $skey ] = 'token';
-				}
-			}
-		}
-		return $editor_data;
 	}
 
 	public static function recursive_array_search( $needle, $haystack, $currentKey = '' ) {
@@ -370,47 +352,28 @@ trait Elementor {
 		$id_page = get_the_ID();
 
 		if ( $datasource ) {
-			$id_page = $datasource;
+			$datasource = absint( $datasource );
+			if ( $datasource > 0 && get_post( $datasource ) ) {
+				$id_page = $datasource;
+			}
 		}
 
 		if ( $id_page && $fromparent ) {
 			$the_parent = wp_get_post_parent_id( $id_page );
-			if ( $the_parent != 0 ) {
+			if ( $the_parent !== 0 ) {
 				$id_page = $the_parent;
 			}
 		}
 
-		if ( ! $id_page ) {
+		if ( !$id_page ) {
 			global $wp;
 			$current_url = home_url( add_query_arg( array(), $wp->request ) );
 			$id_page = url_to_postid( $current_url );
 		}
 
-		// Myself
-		$type_page = get_post_type( $id_page );
-		$id_page = self::get_rev_ID( $id_page, $type_page );
-
-		// Demo
-		if ( \Elementor\Plugin::$instance->editor->is_edit_mode() ) {
-			global $product;
-			global $post;
-
-			// BACKUP
-			$original_post = $post;
-			$original_product = $product;
-
-			$demoPage = get_post_meta( get_the_ID(), 'demo_id', true ); // using get_the_id to retrieve Template ID
-			if ( $demoPage ) {
-				$id_page = $demoPage;
-				$product = self::wooc_data( $id_page );
-				$post = get_post( $id_page );
-			}
-
-			// RESET
-			$post = $original_post;
-			if ( $type_page != 'product' ) {
-				$product = $original_product;
-			}
+		if ( $id_page ) {
+			$type_page = get_post_type( $id_page );
+			$id_page = self::get_translated_post_id( $id_page, $type_page );
 		}
 
 		return $id_page;
@@ -471,39 +434,7 @@ trait Elementor {
 		$icon_html = ob_get_clean();
 		return $icon_html;
 	}
-
-	public static function get_elementor_elements( $type = '' ) {
-		global $wpdb;
-		$sql_query = $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}postmeta
-			WHERE meta_key LIKE %s
-			AND meta_value LIKE %s
-			AND post_id IN (
-				SELECT id FROM {$wpdb->prefix}posts
-				WHERE post_status LIKE 'publish'
-			)",
-			'_elementor_data',
-			'%"widgetType":"' . $wpdb->esc_like( $type ) . '"%'
-		);
-
-		$results = $wpdb->get_results( $sql_query );
-		if ( ! count( $results ) ) {
-			return false;
-		}
-		$elements = array();
-		foreach ( $results as $result ) {
-			$post_id = $result->post_id;
-			$elementor_data = $result->meta_value;
-			$elements_tmp = self::get_elements_from_elementor_data( $elementor_data, 'form' );
-			if ( ! empty( $elements_tmp ) ) {
-				foreach ( $elements_tmp as $key => $value ) {
-					$elements[ $post_id ][ $key ] = $value;
-				}
-			}
-		}
-
-		return $elements;
-	}
-
+	
 	public static function get_elements_from_elementor_data( $elementor_data, $type = '' ) {
 		$elements = array();
 		if ( is_string( $elementor_data ) ) {
@@ -562,3 +493,4 @@ trait Elementor {
 		return '<span class="color-dce icon-dce-logo-dce pull-right ml-1"></span> ';
 	}
 }
+

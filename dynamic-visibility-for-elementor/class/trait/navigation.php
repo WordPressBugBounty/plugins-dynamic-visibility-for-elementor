@@ -82,8 +82,6 @@ trait Navigation {
 		echo '</ul></div>' . "\n";
 	}
 
-	/* -------------------- */
-
 	// Search and Filter Pro - Navigation
 	public static function get_wp_link_page_sf( $i ) {
 		return get_pagenum_link( $i );

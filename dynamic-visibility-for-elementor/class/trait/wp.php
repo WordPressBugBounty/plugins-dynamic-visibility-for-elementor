@@ -165,6 +165,9 @@ trait Wp {
 		return $listTax;
 	}
 
+	/**
+	 * @return array<string>
+	 */
 	public static function get_woocommerce_taxonomies() {
 		return [
 			'product_cat',
@@ -297,34 +300,6 @@ trait Wp {
 		return $templates;
 	}
 
-	public static function get_posts_by_type( $typeId, $myself = null, $group = false ) {
-
-		$exclude_io = array();
-		if ( isset( $myself ) && $myself ) {
-			$exclude_io = array( $myself );
-		}
-		$templates = array();
-		$get_templates = get_posts(array(
-			'post_type' => $typeId,
-			'numberposts' => -1,
-			'post__not_in' => $exclude_io,
-			'post_status' => 'publish',
-			'orderby' => 'title',
-			'order' => 'DESC',
-			'suppress_filters' => false,
-		));
-
-		if ( ! empty( $get_templates ) ) {
-			foreach ( $get_templates as $template ) {
-				$templates[ $template->ID ] = $template->post_title;
-			}
-		}
-
-		return $templates;
-	}
-
-	
-
 	/**
 	 * Get Roles
 	 *
@@ -346,16 +321,6 @@ trait Wp {
 			unset( $ret['administrator'] );
 		}
 		return $ret;
-	}
-
-	public static function get_current_user_role() {
-		if ( is_user_logged_in() ) {
-			$user = wp_get_current_user();
-			$role = (array) $user->roles;
-			return $role[0];
-		} else {
-			return false;
-		}
 	}
 
 	public static function get_term_posts( $term_id, $cpt = 'any' ) {
@@ -445,18 +410,6 @@ trait Wp {
 			$term = get_term_by( $field, $value, $taxonomy );
 		}
 		return $term;
-	}
-
-	public static function get_taxonomy_by_term_id( $term_id ) {
-		$term = get_term( $term_id );
-		if ( $term ) {
-			return $term->taxonomy;
-		}
-		return false;
-	}
-
-	public static function get_author_fields( $meta = false, $group = false, $info = true ) {
-		return static::get_user_fields( $meta, $group, $info );
 	}
 
 	public static function get_user_fields( $meta = false, $group = false, $info = true ) {
@@ -559,38 +512,27 @@ trait Wp {
 		return $result;
 	}
 
-	public static function wooc_data( $idprod = null ) {
-		global $product;
-
-		if ( Helper::is_woocommerce_active() ) {
-
-			if ( isset( $idprod ) ) {
-				$product = wc_get_product( $idprod );
-			} else {
-				$product = wc_get_product();
-			}
-		}
-		if ( empty( $product ) ) {
-			return;
-		}
-
-		return $product;
-	}
-
-	public static function get_rev_ID( $revid, $revtype = false ) {
+	/**
+	 * @param int|string $original_id
+	 * @param boolean $post_type
+	 * @return int
+	 */
+	public static function get_translated_post_id( $original_id, $post_type = false ) {
+		$original_id = absint( $original_id );
+		
 		// Check if WPML is installed
 		if ( ! Helper::is_plugin_active( 'sitepress-multilingual-cms' ) ) {
-			return $revid;
+			return $original_id;
 		}
 
-		if ( ! $revtype ) {
-			$revtype = get_post_type( $revid );
+		if ( ! $post_type ) {
+			$post_type = get_post_type( $original_id );
 		}
-		$rev_id = apply_filters( 'wpml_object_id', $revid, $revtype, true );
-		if ( ! $rev_id ) {
-			return $revid;
+		$translated_id = apply_filters( 'wpml_object_id', $original_id, $post_type, true );
+		if ( ! $translated_id ) {
+			return $original_id;
 		}
-		return $rev_id;
+		return $translated_id;
 	}
 
 	public static function get_post_value( $post_id = null, $field = 'ID', $sub_field = '', $single = null ) {
@@ -608,7 +550,9 @@ trait Wp {
 
 		if ( $field == 'post_excerpt' || $field == 'excerpt' ) {
 			$post = get_post( $post_id );
-			$postValue = $post->post_excerpt;
+			if ( $post ) {
+				$postValue = $post->post_excerpt;
+			}
 		}
 
 		if ( $field == 'the_author' || $field == 'post_author' || $field == 'author' ) {
@@ -1155,27 +1099,5 @@ trait Wp {
 		}
 
 		return $array;
-	}
-
-	/**
-	 * Convert ACF Post Objects to IDS
-	 *
-	 * @param object|array<mixed>|void $input
-	 *
-	 * @return array<mixed>|void
-	 */
-	public static function convert_acf_post_objects_to_ids( $input ) {
-		if ( is_array( $input ) ) {
-			if ( ! empty( $input ) && is_object( $input[0] ) ) {
-				return array_map( function ( $post ) {
-					return $post->ID;
-				}, $input );
-			}
-			return $input;
-		} elseif ( is_object( $input ) ) {
-			return $input->ID ?? '';
-		}
-
-		return $input;
 	}
 }

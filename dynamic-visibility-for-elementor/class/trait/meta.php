@@ -24,6 +24,39 @@ trait Meta {
 		return array();
 	}
 
+	/**
+	 * @param string $source_type
+	 * @param string $other_post_source
+	 * @return string|null
+	 */
+	public static function get_acf_source_id($source_type, $other_post_source = false) {
+		switch ($source_type) {
+			case 'current_post':
+				return Helper::get_the_id($other_post_source);
+			
+			case 'current_user':
+				$user_id = get_current_user_id();
+				return 'user_' . $user_id;
+			
+			case 'current_author':
+				$user_id = get_the_author_meta('ID');
+				return 'user_' . $user_id;
+			
+			case 'current_term':
+				$queried_object = get_queried_object();
+				if ($queried_object instanceof \WP_Term) {
+					$taxonomy = $queried_object->taxonomy;
+					$term_id = $queried_object->term_id;
+					return $taxonomy . '_' . $term_id;
+				}
+				return '';
+			
+			case 'options_page':
+				return 'option';
+		}
+		return null;
+	}
+
 	public static function get_acf_group_locations( $aacf_group ) {
 		$locations = array();
 		if ( is_string( $aacf_group ) ) {
@@ -902,20 +935,38 @@ trait Meta {
 	}
 
 	public static function get_acf_field_value( $idField, $id_page = null, $format = true ) {
+		// Apply filter to allow bypassing loop check for specific use cases
+		$bypass_loop_check = apply_filters( 'dynamicooo/acf/bypass_loop_check', false, $idField, $id_page );
 
 		if ( ! $id_page ) {
 			$id_page = acf_get_valid_post_id();
 		}
+
+		// Check if the ACF loop is already active, unless bypassing is enabled
+		if ( ! $bypass_loop_check ) {
+			if ( acf_get_loop( 'active' ) ) {
+				$sub_field_value = get_sub_field( $idField );
+				if ( $sub_field_value !== false ) {
+					return $sub_field_value;
+				}
+			}
+		}
+
+		// Get the ACF field post data
 		$dataACFieldPost = self::get_acf_field_post( $idField );
 
-		// field in a Repeater or in a Flexible content
+		// Handle fields within a Repeater or Flexible content
 		if ( $dataACFieldPost ) {
 			$parentID = $dataACFieldPost->post_parent;
 			$parent_settings = self::get_acf_field_settings( $parentID );
 			$custom_in_loop = apply_filters( 'dynamicooo/acf/in-loop', false, $parent_settings );
+
+			// Check if the parent field is a repeater, flexible content, or a custom loop
 			if ( ( isset( $parent_settings['type'] ) && ( $parent_settings['type'] == 'repeater' || $parent_settings['type'] == 'flexible_content' ) ) || $custom_in_loop ) {
 				$parent_post = get_post( $parentID );
 				$row = acf_get_loop( 'active' );
+
+				// If not already in a loop, initiate the loop
 				if ( ! $row ) {
 					if ( have_rows( $parent_post->post_excerpt, $id_page ) ) {
 						the_row();
@@ -928,23 +979,25 @@ trait Meta {
 			}
 		}
 
-		// post
+		// Retrieve the main field
 		$theField = get_field( $idField, $id_page, $format );
 
 		if ( ! $theField ) {
-
 			$locations = self::get_acf_field_locations( $dataACFieldPost );
 
+			// Check if taxonomy or other locations apply
 			if ( is_tax() || is_category() || is_tag() || in_array( 'taxonomy', $locations ) ) {
 				$term = get_queried_object();
 				$theField = get_field( $idField, $term, $format );
 			}
 
+			// Check if author field is applicable
 			if ( ! $theField && is_author() ) {
 				$author_id = get_the_author_meta( 'ID' );
 				$theField = get_field( $idField, 'user_' . $author_id, $format );
 			}
 
+			// Check if the user or options fields are applicable
 			if ( ! $theField && in_array( 'user', $locations ) ) {
 				$user_id = get_current_user_id();
 				$theField = get_field( $idField, 'user_' . $user_id, $format );

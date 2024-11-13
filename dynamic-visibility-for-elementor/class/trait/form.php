@@ -131,28 +131,6 @@ trait Form {
 		return $setting;
 	}
 
-	public static function options_array( $string = '', $val = 'pro' ) {
-		$arr = explode( PHP_EOL, $string );
-		foreach ( $arr as $akey => $astring ) {
-			$pieces = explode( '|', $astring, 2 );
-			if ( count( $pieces ) > 1 ) {
-				if ( $val == 'pro' ) {
-					$arr[ $akey ] = array(
-						'text' => reset( $pieces ),
-						'value' => end( $pieces ),
-					);
-				}
-				if ( $val == 'acf' ) {
-					$arr[ $akey ] = array(
-						'text' => end( $pieces ),
-						'value' => reset( $pieces ),
-					);
-				}
-			}
-		}
-		return $arr;
-	}
-
 	public static function form_field_value( $arr = array(), $default = null ) {
 		$str = '';
 		if ( empty( $arr ) ) {

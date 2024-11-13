@@ -4,6 +4,7 @@ namespace DynamicVisibilityForElementor\Modules\QueryControl;
 
 use Elementor\Core\Base\Module as Base_Module;
 use DynamicVisibilityForElementor\Helper;
+use Elementor\Core\Editor\Editor;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly
@@ -30,6 +31,9 @@ class Module extends Base_Module {
 	}
 
 	public function ajax_call_filter_autocomplete( array $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
 
 		if ( empty( $data['query_type'] ) || empty( $data['q'] ) ) {
 			throw new \Exception( 'Bad Request' );
@@ -43,6 +47,10 @@ class Module extends Base_Module {
 	}
 
 	protected function get_options( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$results = [];
 		$fields = Helper::get_options( $data['q'] );
 		if ( ! empty( $fields ) ) {
@@ -57,6 +65,10 @@ class Module extends Base_Module {
 	}
 
 	protected function get_fields( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$results = [];
 		$object_types = $data['object_type'];
 		if ( ! is_array( $object_types ) ) {
@@ -87,6 +99,10 @@ class Module extends Base_Module {
 	 * @return array<int|string,mixed>
 	 */
 	protected function get_dsh_fields( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$results = [];
 
 		$object_type = $data['object_type'];
@@ -222,6 +238,10 @@ class Module extends Base_Module {
 	}
 
 	protected function get_terms_fields( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+		
 		$results = [];
 		$results = $this->get_fields( $data );
 		$terms = Helper::get_taxonomy_terms( null, true, $data['q'] );
@@ -239,6 +259,10 @@ class Module extends Base_Module {
 	}
 
 	protected function get_taxonomies_fields( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$results = [];
 		$results = $this->get_fields( $data );
 		$taxonomies = Helper::get_taxonomies( false, null, $data['q'] );
@@ -257,6 +281,10 @@ class Module extends Base_Module {
 	}
 
 	protected function get_metas( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$results = [];
 		$function = 'get_' . $data['object_type'] . '_metas';
 		$fields = Helper::{$function}( false, $data['q'] ); //@phpstan-ignore-line
@@ -272,6 +300,10 @@ class Module extends Base_Module {
 	}
 
 	protected function get_pods( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$results = [];
 		$function = 'get_' . $data['object_type'] . '_pods';
 		$fields = Helper::{$function}( false, $data['q'] ); //@phpstan-ignore-line
@@ -287,6 +319,10 @@ class Module extends Base_Module {
 	}
 
 	protected function get_posts( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$results = [];
 		$object_type = $data['object_type'] ?? 'any';
 
@@ -319,6 +355,10 @@ class Module extends Base_Module {
 	}
 
 	protected function get_jet( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		if ( ! Helper::is_jetengine_active() ) {
 			return [];
 		}
@@ -369,6 +409,10 @@ class Module extends Base_Module {
 	 * @return array<int,array<string,mixed>>
 	 */
 	protected function get_metabox( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		if ( ! Helper::is_metabox_active() ) {
 			return [];
 		}
@@ -414,6 +458,10 @@ class Module extends Base_Module {
 	 * @return array<int,array<string,mixed>>
 	 */
 	protected function get_metabox_relationship( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		if ( ! Helper::is_metabox_active() ) {
 			return [];
 		}
@@ -438,6 +486,10 @@ class Module extends Base_Module {
 	}
 
 	protected function get_acf( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+		
 		$results = [];
 		$types = ( ! empty( $data['object_type'] ) ) ? $data['object_type'] : array();
 		$acfs = Helper::get_acf_fields( $types );
@@ -464,6 +516,10 @@ class Module extends Base_Module {
 	 * @return array<int,array<string,mixed>>
 	 */
 	protected function get_acf_groups( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$groups = acf_get_field_groups();
 		$results = [];
 		foreach ( $groups as $group ) {
@@ -476,6 +532,10 @@ class Module extends Base_Module {
 	}
 
 	protected function get_acf_flexible_content_layouts( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$groups = acf_get_field_groups();
 		$layouts = [];
 		foreach ( $groups as $group ) {
@@ -499,6 +559,10 @@ class Module extends Base_Module {
 	}
 
 	protected function get_acfposts( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$data['object_type'] = array( 'text', 'textarea', 'select', 'number', 'date_time_picker', 'date_picker', 'oembed', 'file', 'url', 'image', 'wysiwyg' );
 		$results = $this->get_acf( $data );
 		$results[] = array(
@@ -530,6 +594,10 @@ class Module extends Base_Module {
 	}
 
 	protected function get_terms( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$results = [];
 		$taxonomies = ( ! empty( $data['object_type'] ) ) ? $data['object_type'] : get_object_taxonomies( '' );
 		$query_params = [
@@ -553,6 +621,10 @@ class Module extends Base_Module {
 	}
 
 	protected function get_users( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$results = [];
 
 		$object_type = ( ! empty( $data['object_type'] ) ) ? $data['object_type'] : false;
@@ -590,6 +662,10 @@ class Module extends Base_Module {
 	}
 
 	protected function get_authors( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$results = [];
 		$query_params = [
 			'who' => 'authors',
@@ -630,6 +706,10 @@ class Module extends Base_Module {
 	 * @return array<string,mixed>
 	 */
 	protected function get_value_titles_for_acf( $request ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$ids = (array) $request['id'];
 		$results = [];
 		foreach ( $ids as $aid ) {
@@ -646,6 +726,10 @@ class Module extends Base_Module {
 	 * @return array<string,mixed>
 	 */
 	protected function get_value_titles_for_acf_flexible_content_layouts( $request ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$ids = (array) $request['id'];
 		$results = [];
 		foreach ( $ids as $aid ) {
@@ -659,6 +743,10 @@ class Module extends Base_Module {
 	 * @return array<string,mixed>
 	 */
 	protected function get_value_titles_for_acfposts( $request ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$ids = (array) $request['id'];
 		$results = $this->get_value_titles_for_acf( $request );
 
@@ -680,6 +768,10 @@ class Module extends Base_Module {
 	 * @return array<string,mixed>
 	 */
 	protected function get_value_titles_for_metas( $request ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$ids = (array) $request['id'];
 		$results = [];
 		$function = 'get_' . $request['object_type'] . '_metas';
@@ -699,6 +791,10 @@ class Module extends Base_Module {
 	 * @return array<string,mixed>
 	 */
 	protected function get_value_titles_for_fields( $request ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$ids = (array) $request['id'];
 		$results = [];
 		if ( $request['object_type'] == 'any' ) {
@@ -741,6 +837,10 @@ class Module extends Base_Module {
 	 * @return array<string,mixed>
 	 */
 	protected function get_value_titles_for_dsh_fields( $request ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		return $this->get_value_titles_for_fields( $request );
 	}
 
@@ -749,6 +849,10 @@ class Module extends Base_Module {
 	 * @return array<int|string,mixed>
 	 */
 	protected function get_value_titles_for_posts( $request ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$ids = (array) $request['id'];
 		$results = [];
 		$is_ctp = false;
@@ -775,23 +879,35 @@ class Module extends Base_Module {
 
 	/**
 	 * @param array<string,mixed> $request
-	 * @return array<int,mixed>
+	 * @return array<int|string,mixed>
 	 */
 	protected function get_value_titles_for_terms( $request ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$id = $request['id'];
 		$results = [];
+
 		if ( is_numeric( $id ) ) {
-			$term = get_term_by( 'term_taxonomy_id', $id );
-			$results[ $id ] = $term->name;
-			return $results;
-		} else {
-			$query_params = [
-				'slug' => $id,
-			];
-			$terms = get_terms( $query_params );
-			foreach ( $terms as $term ) {
+			$term = get_term( $id );
+
+			if ( $term && ! is_wp_error( $term ) ) {
 				$results[ $term->term_id ] = $term->name;
 			}
+
+			return $results;
+		} else {
+			$terms = get_terms( [ 'slug' => $id ] );
+
+			if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
+				foreach ( $terms as $term ) {
+					if ( ! empty( $term->term_id ) && ! empty( $term->name ) ) {
+						$results[ $term->term_id ] = $term->name;
+					}
+				}
+			}
+
 			return $results;
 		}
 	}
@@ -801,6 +917,10 @@ class Module extends Base_Module {
 	 * @return array<string,mixed>
 	 */
 	protected function get_value_titles_for_taxonomies( $request ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$ids = (array) $request['id'];
 		$results = [];
 		foreach ( $ids as $value ) {
@@ -821,6 +941,10 @@ class Module extends Base_Module {
 	 * @return array<int,mixed>
 	 */
 	protected function get_value_titles_for_users( $request ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$ids = (array) $request['id'];
 		$results = [];
 		$is_role = false;
@@ -859,6 +983,10 @@ class Module extends Base_Module {
 	 * @return array<int,mixed>
 	 */
 	protected function get_value_titles_for_authors( $request ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$ids = (array) $request['id'];
 		$results = [];
 		$query_params = [
@@ -882,6 +1010,10 @@ class Module extends Base_Module {
 	 * @return array<string,mixed>
 	 */
 	protected function get_value_titles_for_terms_fields( $request ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$ids = (array) $request['id'];
 		$ids_post = array();
 		$ids_term = array();
@@ -919,6 +1051,10 @@ class Module extends Base_Module {
 	 * @return array<string,mixed>
 	 */
 	protected function get_value_titles_for_taxonomies_fields( $request ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
 		$ids = (array) $request['id'];
 		$ids_post = array();
 		$ids_tax = array();

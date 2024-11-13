@@ -3,36 +3,43 @@ namespace DynamicVisibilityForElementor;
 
 trait Filesystem {
 
-	public static function dir_to_array( $dir, $hidden = false, $files = true ) {
-		$result = array();
-		$cdir = scandir( $dir );
-		foreach ( $cdir as $key => $value ) {
-			if ( ! in_array( $value, array( '.', '..' ) ) ) {
-				if ( is_dir( $dir . DIRECTORY_SEPARATOR . $value ) ) {
-					$result[ $value ] = self::dir_to_array( $dir . DIRECTORY_SEPARATOR . $value, $hidden, $files );
-				} elseif ( $files ) {
-					if ( substr( $value, 0, 1 ) != '.' ) { // hidden file
-						$result[] = $value;
-					}
-				}
-			}
-		}
-		return $result;
-	}
+    public static function is_empty_dir( $dirname ) {
+        $base_dir = realpath( get_home_path() );
+        $dirname = realpath( $dirname );
 
-	public static function is_empty_dir( $dirname ) {
-		if ( ! is_dir( $dirname ) ) {
-			return false;
-		}
-		foreach ( scandir( $dirname ) as $file ) {
-			if ( ! in_array( $file, array( '.', '..', '.svn', '.git' ) ) ) {
-				return false;
-			}
-		}
-		return true;
-	}
+        if ( $dirname === false || strpos( $dirname, $base_dir ) !== 0 ) {
+            // Invalid path or outside the allowed directory
+            return false;
+        }
+
+        if ( ! is_dir( $dirname ) ) {
+            return false;
+        }
+
+        $iterator = new \FilesystemIterator( $dirname, \FilesystemIterator::SKIP_DOTS );
+        foreach ( $iterator as $fileinfo ) {
+            $filename = $fileinfo->getFilename();
+            if ( ! in_array( $filename, array( '.svn', '.git' ), true ) ) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 	public static function url_to_path( $url ) {
-		return substr( get_home_path(), 0, -1 ) . wp_make_link_relative( $url );
+		$relative_url = wp_make_link_relative( $url );
+		$relative_path = wp_normalize_path( ltrim( $relative_url, '/' ) );
+	
+		$home_path = wp_normalize_path( get_home_path() );
+		$path = $home_path . $relative_path;
+	
+		$normalized_path = wp_normalize_path( $path );
+	
+		if ( strpos( $normalized_path, $home_path ) !== 0 ) {
+			// Invalid path or outside the allowed directory
+			return false;
+		}
+	
+		return $path;
 	}
 }
