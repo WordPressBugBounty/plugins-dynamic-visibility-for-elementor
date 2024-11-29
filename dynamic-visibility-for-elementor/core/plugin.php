@@ -54,6 +54,10 @@ class Plugin
 
     public function init()
     {
+        add_action( 'init', function() {
+            load_plugin_textdomain( 'dynamic-visibility-for-elementor' );
+        } );
+
         $this->init_managers();
 
         // Promo

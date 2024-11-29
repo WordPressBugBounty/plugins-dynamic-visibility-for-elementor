@@ -4,7 +4,7 @@
  * Plugin Name: Dynamic Visibility for Elementor
  * Description: Visibility rules for widgets, containers, sections, columns or pages with advanced conditions and removing the element from the DOM.
  * Plugin URI: https://www.dynamic.ooo/widget/dynamic-visibility/?utm_source=wp-plugins&utm_campaign=plugin-uri&utm_medium=wp-dash
- * Version: 5.0.14
+ * Version: 5.0.15
  * Author: Dynamic.ooo
  * Author URI: https://www.dynamic.ooo/
  * Text Domain: dynamic-visibility-for-elementor
@@ -45,9 +45,6 @@ require_once __DIR__ . '/constants.php';
  * Load the plugin after Elementor (and other plugins) are loaded.
  */
 function dynamic_visibility_for_elementor_load() {
-	// Load localization file
-	load_plugin_textdomain( 'dynamic-visibility-for-elementor' );
-
 	// Notice if the Elementor is not active
 	if ( ! did_action( 'elementor/loaded' ) ) {
 		add_action( 'admin_notices', 'dve_fail_load' );
