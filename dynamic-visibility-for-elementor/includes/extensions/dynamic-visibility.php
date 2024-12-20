@@ -38,6 +38,13 @@ class DynamicVisibility extends ExtensionPrototype {
 		);
 		$this->register_controls_sections_hooks();
 
+		add_filter( 'elementor/element/is_dynamic_content', function ( $is_dynamic_content, $raw_data ) {
+			if ( ! empty( $raw_data['settings']['enabled_visibility'] ) ) {
+				return true;
+			}
+			return $is_dynamic_content;
+		}, 10, 2 );
+
 		parent::__construct();
 	}
 
@@ -184,7 +191,6 @@ class DynamicVisibility extends ExtensionPrototype {
 			'in_the_loop' => esc_html__( 'In the Loop', 'dynamic-visibility-for-elementor' ),
 		];
 	}
-
 
 	/**
 	 * Site Functions
@@ -573,6 +579,7 @@ class DynamicVisibility extends ExtensionPrototype {
 		$element_type = $element->get_type();
 
 		if ( $section == 'advanced' ) {
+
 			$element->add_control(
 				'enabled_visibility',
 				[
@@ -2118,7 +2125,7 @@ class DynamicVisibility extends ExtensionPrototype {
 		if ( ! \Elementor\Plugin::$instance->editor->is_edit_mode() ) {
 			$user_id = get_current_user_id();
 			$settings = $element->get_settings_for_display();
-			if ( ( ! $hidden && $settings['dce_visibility_selected'] == 'yes' ) || ( $hidden && $settings['dce_visibility_selected'] == 'hide' ) ) {
+			if ( ( ! $hidden && ( $settings['dce_visibility_selected'] ?? '' ) == 'yes' ) || ( $hidden && ( $settings['dce_visibility_selected'] ?? '' ) == 'hide' ) ) {
 				if ( ! empty( $settings['dce_visibility_max_user'] ) || ! empty( $settings['dce_visibility_max_day'] ) || ! empty( $settings['dce_visibility_max_total'] ) ) {
 					$dce_visibility_max = get_option( 'dce_visibility_max', [] );
 					// remove elements with no limits
@@ -2187,7 +2194,7 @@ class DynamicVisibility extends ExtensionPrototype {
 					update_option( 'dce_visibility_max', $dce_visibility_max );
 				}
 			}
-			if ( $settings['dce_visibility_selected'] ) {
+			if ( ! empty( $settings['dce_visibility_selected'] ) ) {
 				if ( $user_id && ! empty( $settings['dce_visibility_max_user'] ) ) {
 					$dce_visibility_max_user = get_user_meta( $user_id, 'dce_visibility_max_user', true );
 					if ( empty( $dce_visibility_max_user[ $element->get_id() ] ) ) {
@@ -3430,14 +3437,14 @@ class DynamicVisibility extends ExtensionPrototype {
 			}
 		}
 
-		if ( $settings['dce_visibility_logical_connective'] === 'and' ) {
+		if ( isset( $settings['dce_visibility_logical_connective'] ) && $settings['dce_visibility_logical_connective'] === 'and' ) {
 			// true only if at least one trigger set and all triggers have triggered.
 			$triggered = $triggers_n && count( $conditions ) === $triggers_n;
 		} else {
 			$triggered = ! empty( $conditions );
 		}
 
-		$shidden = $settings['dce_visibility_selected'] == 'yes';
+		$shidden = ( $settings['dce_visibility_selected'] ?? '' ) == 'yes';
 
 		$hidden = $shidden ? ! $triggered : $triggered;
 

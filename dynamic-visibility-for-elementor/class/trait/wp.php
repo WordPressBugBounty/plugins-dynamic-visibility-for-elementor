@@ -514,12 +514,12 @@ trait Wp {
 
 	/**
 	 * @param int|string $original_id
-	 * @param boolean $post_type
+	 * @param string|false $post_type
 	 * @return int
 	 */
 	public static function get_translated_post_id( $original_id, $post_type = false ) {
 		$original_id = absint( $original_id );
-		
+
 		// Check if WPML is installed
 		if ( ! Helper::is_plugin_active( 'sitepress-multilingual-cms' ) ) {
 			return $original_id;
@@ -589,7 +589,7 @@ trait Wp {
 			}
 		}
 
-		if ( $postValue === null ) { // for meta WooCoomerce plugin
+		if ( $postValue === null ) { // for meta WooCommerce plugin
 			if ( metadata_exists( 'post', $post_id, '_' . $field ) ) {
 				$postValue = get_post_meta( $post_id, '_' . $field, $single );
 			}
@@ -752,28 +752,6 @@ trait Wp {
 	public static function get_term_link( $term_id = null ) {
 		return get_term_link( $term_id );
 	}
-
-	public static function get_options( $like = '' ) {
-		global $wpdb;
-		$options = array();
-		$query = 'SELECT option_name FROM ' . $wpdb->prefix . 'options';
-
-		if ( $like ) {
-			$query .= ' WHERE option_name LIKE %s';
-		}
-
-		$prepared_query = $wpdb->prepare( $query, $like ? '%' . $wpdb->esc_like( $like ) . '%' : '' );
-
-		$results = $wpdb->get_results( $prepared_query );
-		if ( ! empty( $results ) ) {
-			foreach ( $results as $key => $aopt ) {
-				$options[ $aopt->option_name ] = $aopt->option_name;
-			}
-			ksort( $options );
-		}
-		return $options;
-	}
-
 
 	
 

@@ -2,9 +2,9 @@
 
 namespace DynamicVisibilityForElementor\Modules\QueryControl;
 
-use Elementor\Core\Base\Module as Base_Module;
-use DynamicVisibilityForElementor\Helper;
 use Elementor\Core\Editor\Editor;
+use DynamicVisibilityForElementor\Helper;
+use Elementor\Core\Base\Module as Base_Module;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly
@@ -46,22 +46,76 @@ class Module extends Base_Module {
 		];
 	}
 
+	/**
+	 * Get all Search and Filter v3 query ids
+	 *
+	 * @param array<mixed> $data
+	 * @return array<int,array<string,int|string>>
+	 */
+	protected function get_search_and_filter_v3_query_ids( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
+		$queries = \Search_Filter\Queries::find(
+			[
+				'status' => 'enabled',
+				'number' => 0,
+				'meta_query' => [
+					[
+						'key' => 'query_integration',
+						'value' => 'dynamicooo/dynamic-visibility-for-elementor',
+						'compare' => '=',
+					],
+				],
+			],
+			'records'
+		);
+
+		if ( ! empty( $data['q'] ) ) {
+			$queries = array_filter($queries, function ( $query ) use ( $data ) {
+				return stripos( $query->name, $data['q'] ) !== false;
+			});
+		}
+
+		$result = [];
+		foreach ( $queries as $query ) {
+			$result[] = [
+				'id' => $query->id,
+				'text' => esc_attr( $query->name ),
+			];
+		}
+		return $result;
+	}
+
+	/**
+	 * Get all options from the database and filter them by the like parameter if provided
+	 *
+	 * @param array<mixed> $data
+	 * @return array<int,array<string,int|string>>
+	 */
 	protected function get_options( $data ) {
 		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
 			throw new \Exception( 'Access denied.' );
 		}
 
-		$results = [];
-		$fields = Helper::get_options( $data['q'] );
-		if ( ! empty( $fields ) ) {
-			foreach ( $fields as $field_key => $field_name ) {
-				$results[] = [
-					'id' => $field_key,
-					'text' => esc_attr( $field_name ),
-				];
-			}
+		// Get all options and filter them
+		$option_keys = array_keys( wp_load_alloptions() );
+		$options = array_combine( $option_keys, $option_keys );
+
+		// Filter options if search query is provided
+		if ( ! empty( $data['q'] ) ) {
+			$options = array_filter($options, function ( $key ) use ( $data ) {
+				return stripos( $key, $data['q'] ) !== false;
+			}, ARRAY_FILTER_USE_KEY);
 		}
-		return $results;
+
+		return array_map(function ( $key ) {
+			return [
+				'id' => $key,
+				'text' => esc_attr( $key ),
+			];
+		}, array_keys( $options ));
 	}
 
 	protected function get_fields( $data ) {
@@ -241,7 +295,7 @@ class Module extends Base_Module {
 		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
 			throw new \Exception( 'Access denied.' );
 		}
-		
+
 		$results = [];
 		$results = $this->get_fields( $data );
 		$terms = Helper::get_taxonomy_terms( null, true, $data['q'] );
@@ -489,14 +543,14 @@ class Module extends Base_Module {
 		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
 			throw new \Exception( 'Access denied.' );
 		}
-		
+
 		$results = [];
 		$types = ( ! empty( $data['object_type'] ) ) ? $data['object_type'] : array();
 		$acfs = Helper::get_acf_fields( $types );
 		if ( ! empty( $acfs ) ) {
 			foreach ( $acfs as $akey => $acf ) {
 				if ( strlen( $data['q'] ) > 2 ) {
-					if ( strpos( $akey, $data['q'] ) === false && strpos( $acf, $data['q'] ) === false ) {
+					if ( strpos( (string) $akey, $data['q'] ) === false && strpos( (string) $acf, $data['q'] ) === false ) {
 						continue;
 					}
 				}
@@ -620,74 +674,35 @@ class Module extends Base_Module {
 		return $results;
 	}
 
+	/**
+	 * Get Users and filter by search term
+	 *
+	 * @param array<string,mixed> $data
+	 * @return array<int,array<string,int|string>>
+	 */
 	protected function get_users( $data ) {
 		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
 			throw new \Exception( 'Access denied.' );
 		}
 
-		$results = [];
+		$query_params = [
+			'fields' => [ 'ID', 'display_name' ],
+		];
 
-		$object_type = ( ! empty( $data['object_type'] ) ) ? $data['object_type'] : false;
+		if ( ! empty( $data['q'] ) ) {
+			$query_params['search'] = '*' . $data['q'] . '*';
+			$query_params['search_columns'] = [ 'user_login', 'user_nicename', 'display_name' ];
+		}
 
-		if ( $object_type == 'role' ) {
-			$list = Helper::get_roles();
-			$list['visitor'] = 'Visitor (non logged User)';
-			foreach ( $list as $akey => $alist ) {
-				if ( strlen( $data['q'] ) > 2 ) {
-					if ( strpos( $akey, $data['q'] ) === false && strpos( $alist, $data['q'] ) === false ) {
-						continue;
-					}
-				}
-				$results[] = [
-					'id' => $akey,
-					'text' => esc_attr( $alist ),
-				];
-			}
-		} else {
-			$query_params = [
-				'search' => '*' . $data['q'] . '*',
-			];
-			if ( empty( $data['object_type'] ) ) {
-				$query_params['role__in'] = Helper::str_to_array( ',', $data['object_type'] );
-			}
-			$users = get_users( $query_params ); // Array of WP_User objects
-			foreach ( $users as $user ) {
-				$results[] = [
+		return array_map(
+			function ( $user ) {
+				return [
 					'id' => $user->ID,
 					'text' => esc_attr( $user->display_name ),
 				];
-			}
-		}
-		return $results;
-	}
-
-	protected function get_authors( $data ) {
-		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
-			throw new \Exception( 'Access denied.' );
-		}
-
-		$results = [];
-		$query_params = [
-			'who' => 'authors',
-			'has_published_posts' => true,
-			'fields' => [
-				'ID',
-				'display_name',
-			],
-			'search' => '*' . $data['q'] . '*',
-			'search_columns' => [
-				'user_login',
-				'user_nicename',
-			],
-		];
-		$user_query = new \WP_User_Query( $query_params );
-		foreach ( $user_query->get_results() as $author ) {
-			$results[] = [
-				'id' => $author->ID,
-				'text' => esc_attr( $author->display_name ),
-			];
-		}
-		return $results;
+			},
+			get_users( $query_params )
+		);
 	}
 
 	/**
@@ -695,9 +710,73 @@ class Module extends Base_Module {
 	 *
 	 * @param array<string,mixed> $request
 	 * @return array<string,mixed>
+	 * @throws \Exception If query type is invalid or user lacks permissions
 	 */
 	public function ajax_call_control_value_titles( $request ) {
-		$results = call_user_func( [ $this, 'get_value_titles_for_' . $request['query_type'] ], $request );
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
+		// Check if query_type exists and is a string
+		if ( empty( $request['query_type'] ) || ! is_string( $request['query_type'] ) ) {
+			throw new \Exception( 'Invalid query type.' );
+		}
+
+		// List of valid query types
+		$valid_query_types = [
+			'acf',
+			'acf_flexible_content_layouts',
+			'acfposts',
+			'metas',
+			'fields',
+			'dsh_fields',
+			'posts',
+			'terms',
+			'taxonomies',
+			'users',
+			'terms_fields',
+			'taxonomies_fields',
+			'search_and_filter_v3_query_ids',
+		];
+
+		$query_type = sanitize_key( $request['query_type'] );
+
+		if ( ! in_array( $query_type, $valid_query_types, true ) ) {
+			throw new \Exception( 'Invalid query type.' );
+		}
+
+		$method = 'get_value_titles_for_' . $query_type;
+
+		if ( ! method_exists( $this, $method ) ) {
+			throw new \Exception( 'Query type handler not found.' );
+		}
+
+		return $this->$method( $request );
+	}
+
+	/**
+	 * @param array<string,mixed> $request
+	 * @return array<int|string,mixed>
+	 */
+	protected function get_value_titles_for_search_and_filter_v3_query_ids( $request ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
+		$ids = (array) $request['id'];
+		if ( empty( $ids ) ) {
+			return [];
+		}
+
+		$results = [];
+
+		foreach ( $ids as $id ) {
+			$query = \Search_Filter\Queries\Query::find([
+				'id' => $id,
+			]);
+			$results[ $id ] = esc_attr( $query->get_name() ?? '' );
+		}
+
 		return $results;
 	}
 
@@ -711,11 +790,15 @@ class Module extends Base_Module {
 		}
 
 		$ids = (array) $request['id'];
+		if ( empty( $ids ) ) {
+			return [];
+		}
+
 		$results = [];
-		foreach ( $ids as $aid ) {
-			$acf = Helper::get_acf_field_post( $aid );
-			if ( $acf ) {
-				$results[ $aid ] = $acf->post_title;
+		foreach ( $ids as $field_key ) {
+			$field = acf_get_field( $field_key );
+			if ( $field ) {
+				$results[ $field_key ] = $field['label'];
 			}
 		}
 		return $results;
@@ -774,15 +857,29 @@ class Module extends Base_Module {
 
 		$ids = (array) $request['id'];
 		$results = [];
-		$function = 'get_' . $request['object_type'] . '_metas';
+
+		switch ( $request['object_type'] ) {
+			case 'post':
+				$fields = Helper::get_post_metas( false, $ids[0] );
+				break;
+			case 'user':
+				$fields = Helper::get_user_metas( false, $ids[0] );
+				break;
+			case 'term':
+				$fields = Helper::get_term_metas( false, $ids[0] );
+				break;
+			default:
+				return $results;
+		}
+
 		foreach ( $ids as $aid ) {
-			$fields = Helper::{$function}( false, $aid ); //@phpstan-ignore-line
 			foreach ( $fields as $field_key => $field_name ) {
 				if ( in_array( $field_key, $ids ) ) {
 					$results[ $field_key ] = $field_name;
 				}
 			}
 		}
+
 		return $results;
 	}
 
@@ -802,34 +899,14 @@ class Module extends Base_Module {
 		} else {
 			$object_types = array( $request['object_type'] );
 		}
+
 		foreach ( $object_types as $object_type ) {
 			foreach ( $ids as $id ) {
-				$func = 'get_label_' . $object_type . '_field';
-
-				if ( ! method_exists( $this, $func ) || ! is_callable( [ $this, $func ] ) ) {
-					// Returns a value equal to the key
-					$results[ $id ] = $id;
-					continue;
-				}
-				/**
-				 * @var callable
-				 */
-				$call = [ $this, $func ];
-				$label = call_user_func_array( $call, [ $id ] );
-
-				$results[ $id ] = $label;
+				// Returns a value equal to the key
+				$results[ $id ] = $id;
 			}
 		}
 		return $results;
-	}
-
-	/**
-	 * @param string $key
-	 * @return string
-	 */
-	protected function get_label_acf_field( $key ) {
-		$field = get_field_object( $key );
-		return '[' . $key . '] ' . esc_html( $field['label'] ?? $key );
 	}
 
 	/**
@@ -878,8 +955,10 @@ class Module extends Base_Module {
 	}
 
 	/**
-	 * @param array<string,mixed> $request
-	 * @return array<int|string,mixed>
+	 * Get term titles based on term IDs or slugs
+	 *
+	 * @param array<string,mixed> $request Request data containing term identifiers
+	 * @return array<int|string,mixed> Array of term IDs/names pairs
 	 */
 	protected function get_value_titles_for_terms( $request ) {
 		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
@@ -887,29 +966,33 @@ class Module extends Base_Module {
 		}
 
 		$id = $request['id'];
+
+		$ids = (array) $id;
 		$results = [];
 
-		if ( is_numeric( $id ) ) {
-			$term = get_term( $id );
+		foreach ( $ids as $term_id ) {
+			if ( is_numeric( $term_id ) ) {
+				// Search by numeric ID
+				$term = get_term( (int) $term_id );
+				if ( $term instanceof \WP_Term ) {
+					$results[ $term->term_id ] = sanitize_text_field( $term->name );
+				}
+			} else {
+				// Search by slug
+				$terms = get_terms([
+					'slug' => sanitize_text_field( $term_id ),
+					'hide_empty' => false,
+				]);
 
-			if ( $term && ! is_wp_error( $term ) ) {
-				$results[ $term->term_id ] = $term->name;
-			}
-
-			return $results;
-		} else {
-			$terms = get_terms( [ 'slug' => $id ] );
-
-			if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
-				foreach ( $terms as $term ) {
-					if ( ! empty( $term->term_id ) && ! empty( $term->name ) ) {
-						$results[ $term->term_id ] = $term->name;
+				if ( ! is_wp_error( $terms ) ) {
+					foreach ( $terms as $term ) {
+						$results[ $term->term_id ] = sanitize_text_field( $term->name );
 					}
 				}
 			}
-
-			return $results;
 		}
+
+		return $results;
 	}
 
 	/**
@@ -938,70 +1021,20 @@ class Module extends Base_Module {
 
 	/**
 	 * @param array<string,mixed> $request
-	 * @return array<int,mixed>
+	 * @return array<int|string,mixed>
 	 */
 	protected function get_value_titles_for_users( $request ) {
 		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
 			throw new \Exception( 'Access denied.' );
 		}
 
-		$ids = (array) $request['id'];
 		$results = [];
-		$is_role = false;
-		if ( ! empty( $ids ) ) {
-			$first = reset( $ids );
-			$is_role = ! is_numeric( $first );
-		}
-		if ( $is_role ) {
-			$roles = Helper::get_roles();
-			$roles['visitor'] = 'Visitor (non logged User)';
-			if ( ! empty( $ids ) ) {
-				foreach ( $ids as $aid ) {
-					if ( isset( $roles[ $aid ] ) ) {
-						$results[ $aid ] = $roles[ $aid ];
-					}
-				}
-			}
-		} else {
-			$query_params = [
-				'fields' => [
-					'ID',
-					'display_name',
-				],
-				'include' => $ids,
-			];
-			$user_query = new \WP_User_Query( $query_params );
-			foreach ( $user_query->get_results() as $user ) {
-				$results[ $user->ID ] = $user->display_name;
+		foreach ( (array) $request['id'] as $user_id ) {
+			if ( $user = get_userdata( $user_id ) ) {
+				$results[ $user_id ] = esc_attr( $user->display_name );
 			}
 		}
-		return $results;
-	}
 
-	/**
-	 * @param array<string,mixed> $request
-	 * @return array<int,mixed>
-	 */
-	protected function get_value_titles_for_authors( $request ) {
-		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
-			throw new \Exception( 'Access denied.' );
-		}
-
-		$ids = (array) $request['id'];
-		$results = [];
-		$query_params = [
-			'who' => 'authors',
-			'has_published_posts' => true,
-			'fields' => [
-				'ID',
-				'display_name',
-			],
-			'include' => $ids,
-		];
-		$user_query = new \WP_User_Query( $query_params );
-		foreach ( $user_query->get_results() as $author ) {
-			$results[ $author->ID ] = $author->display_name;
-		}
 		return $results;
 	}
 

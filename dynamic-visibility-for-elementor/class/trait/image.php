@@ -71,10 +71,6 @@ trait Image {
 			return null;
 		}
 
-		if ( ! current_user_can( 'read_post', $attachment_id ) ) {
-			return null;
-		}
-
 		if ( ! wp_attachment_is_image( $attachment_id ) ) {
 			return null;
 		}

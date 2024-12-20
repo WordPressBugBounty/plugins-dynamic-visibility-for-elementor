@@ -272,11 +272,12 @@ trait Plugins {
 		return false;
 	}
 
+	/**
+	 * @return boolean
+	 */
 	public static function is_searchandfilterpro_active() {
-		if ( defined( 'SEARCH_FILTER_PRO_BASE_PATH' ) ) {
-			return true;
-		}
-		return false;
+		// Check if either SFPro2 or SFPro3 constants are defined
+		return defined( 'SEARCH_FILTER_PRO_BASE_PATH' ) || defined( 'SEARCH_FILTER_PRO_BASE_FILE' );
 	}
 
 	public static function is_elementorpro_active() {
@@ -321,5 +322,31 @@ trait Plugins {
 			return $plugin_disabled;
 		}
 		return true;
+	}
+
+	/**
+	 * @param int|float $version
+	 * @return bool
+	 */
+	public static function is_search_filter_pro_version( $version ) {
+		if ( ! in_array( $version, [ 2, 3, 3.1 ], true ) ) {
+			return false;
+		}
+
+		if ( 2 === $version ) {
+			return defined( 'SEARCH_FILTER_VERSION' ) && version_compare( SEARCH_FILTER_VERSION, '2.0.0', '>=' ) && version_compare( SEARCH_FILTER_VERSION, '3.0.0', '<' );
+		}
+
+		$is_pro_defined = defined( 'SEARCH_FILTER_PRO_VERSION' );
+		if ( ! $is_pro_defined ) {
+			return false;
+		}
+
+		if ( 3 === $version ) {
+			return version_compare( SEARCH_FILTER_PRO_VERSION, '3.0.0', '>=' ) && version_compare( SEARCH_FILTER_PRO_VERSION, '3.1.0', '<' );
+		}
+
+		// Version 3.1 or greater
+		return version_compare( SEARCH_FILTER_PRO_VERSION, '3.1.0', '>=' );
 	}
 }

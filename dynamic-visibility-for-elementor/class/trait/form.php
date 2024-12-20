@@ -207,24 +207,24 @@ trait Form {
 
 				// object
 				if ( is_object( $value ) && get_class( $value ) == 'WP_Post' ) {
-					$str_tmp .= $value->post_title . '|' . $value->ID;
+					$str_tmp .= esc_html( $value->post_title ) . '|' . $value->ID;
 				}
 				if ( is_object( $value ) && get_class( $value ) == 'WP_User' ) {
-					$str_tmp .= $value->display_name . '|' . $value->ID;
+					$str_tmp .= esc_html( $value->display_name ) . '|' . $value->ID;
 				}
 				if ( is_object( $value ) && get_class( $value ) == 'WP_Term' ) {
-					$str_tmp .= $value->name . '|' . $value->term_id;
+					$str_tmp .= esc_html( $value->name ) . '|' . $value->term_id;
 				}
 
 				// array
 				if ( is_array( $value ) && isset( $value['post_title'] ) ) {
-					$str_tmp .= $value['post_title'] . '|' . $value['ID'];
+					$str_tmp .= esc_html( $value['post_title'] ) . '|' . $value['ID'];
 				}
 				if ( is_array( $value ) && isset( $value['display_name'] ) ) {
-					$str_tmp .= $value['display_name'] . '|' . $value['ID'];
+					$str_tmp .= esc_html( $value['display_name'] ) . '|' . $value['ID'];
 				}
 				if ( is_array( $value ) && isset( $value['name'] ) ) {
-					$str_tmp .= $value['name'] . '|' . $value['term_id'];
+					$str_tmp .= esc_html( $value['name'] ) . '|' . $value['term_id'];
 				}
 
 				// INT
@@ -236,22 +236,22 @@ trait Form {
 					if ( $val == 'user' ) {
 						$tmp_user = get_user_by( 'ID', $value );
 						if ( $tmp_user ) {
-							$str_tmp = $tmp_user->display_name . '|' . $value;
+							$str_tmp = esc_html( $tmp_user->display_name ) . '|' . $value;
 						}
 					}
 					if ( $val == 'term' ) {
 						$tmp_term = Helper::get_term_by( 'id', $value );
 						if ( $tmp_term ) {
-							$str_tmp = $tmp_term->name . '|' . $value;
+							$str_tmp = esc_html( $tmp_term->name ) . '|' . $value;
 						}
 					}
 				}
 
 				if ( ! $str_tmp ) {
 					if ( $val == 'keys' || ! is_numeric( $key ) ) {
-						$str_tmp .= $value . '|' . $key;
+						$str_tmp .= esc_html( $value ) . '|' . $key;
 					} else {
-						$str_tmp .= $value;
+						$str_tmp .= esc_html( $value );
 					}
 				}
 
@@ -265,7 +265,6 @@ trait Form {
 		return $str;
 	}
 
-
 	public static function get_field( $custom_id, $settings = array() ) {
 		if ( ! empty( $settings['form_fields'] ) ) {
 			foreach ( $settings['form_fields'] as $afield ) {
@@ -276,6 +275,7 @@ trait Form {
 		}
 		return false;
 	}
+
 	public static function get_field_type( $custom_id, $settings = array() ) {
 		$field = self::get_field( $custom_id, $settings );
 		if ( $field ) {

@@ -43,13 +43,13 @@ trait Strings {
 			return $avalue;
 		}
 		if ( is_object( $avalue ) && get_class( $avalue ) == 'WP_Term' ) {
-			return $avalue->name;
+			return esc_html( $avalue->name );
 		}
 		if ( is_object( $avalue ) && get_class( $avalue ) == 'WP_Post' ) {
-			return $avalue->post_title;
+			return esc_html( $avalue->post_title );
 		}
 		if ( is_object( $avalue ) && get_class( $avalue ) == 'WP_User' ) {
-			return $avalue->display_name;
+			return esc_html( $avalue->display_name );
 		}
 
 		if ( is_object( $avalue ) ) {

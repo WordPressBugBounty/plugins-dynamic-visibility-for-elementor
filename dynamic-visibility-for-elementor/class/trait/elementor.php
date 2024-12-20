@@ -230,29 +230,7 @@ trait Elementor {
 		}
 		return false;
 	}
-	
-	public static function set_all_settings_by_id( $element_id = null, $settings = array(), $post_id = null ) {
-		if ( ! $post_id ) {
-			$post_id = get_the_ID();
-			if ( ! $post_id && isset( $_GET['post'] ) ) {
-				$post_id = intval( $_GET['post'] );
-			}
-		}
-	
-		$post_meta = self::get_settings_by_id( null, $post_id );
-		if ( $element_id ) {
-			$keys_array = self::array_find_deep( $post_meta, $element_id );
-			$tmp_key = array_search( 'id', $keys_array );
-			if ( $tmp_key !== false ) {
-				$keys_array[ $tmp_key ] = 'settings';
-			}
-			$post_meta = Helper::set_array_value_by_keys( is_array( $post_meta ) ? $post_meta : [], $keys_array, $settings );
-		}
-	
-		$post_meta_prepared = wp_json_encode( $post_meta );
-		update_metadata( 'post', $post_id, '_elementor_data', $post_meta_prepared );
-	}
-	
+
 	public static function set_settings_by_id( $element_id, $key, $value = null, $post_id = null ) {
 		if ( ! $post_id ) {
 			$post_id = get_the_ID();
@@ -260,7 +238,7 @@ trait Elementor {
 				$post_id = intval( $_GET['post'] );
 			}
 		}
-	
+
 		$post_meta = self::get_elementor_data( $post_id );
 		$keys_array = self::array_find_deep( $post_meta, $element_id );
 		if ( ! empty( $keys_array ) ) {
@@ -271,7 +249,7 @@ trait Elementor {
 			}
 			$keys_array[] = $key;
 			$post_meta = Helper::set_array_value_by_keys( is_array( $post_meta ) ? $post_meta : [], $keys_array, $value );
-	
+
 			$post_meta_prepared = wp_json_encode( $post_meta );
 			update_metadata( 'post', $post_id, '_elementor_data', $post_meta_prepared );
 		}
@@ -365,7 +343,7 @@ trait Elementor {
 			}
 		}
 
-		if ( !$id_page ) {
+		if ( ! $id_page ) {
 			global $wp;
 			$current_url = home_url( add_query_arg( array(), $wp->request ) );
 			$id_page = url_to_postid( $current_url );
@@ -434,7 +412,7 @@ trait Elementor {
 		$icon_html = ob_get_clean();
 		return $icon_html;
 	}
-	
+
 	public static function get_elements_from_elementor_data( $elementor_data, $type = '' ) {
 		$elements = array();
 		if ( is_string( $elementor_data ) ) {
@@ -493,4 +471,3 @@ trait Elementor {
 		return '<span class="color-dce icon-dce-logo-dce pull-right ml-1"></span> ';
 	}
 }
-

@@ -4,7 +4,7 @@ Tags: elementor, visibility, hide, dynamic, container, widget
 Requires at least: 5.2
 Tested up to: 6.7.1
 Requires PHP: 7.1
-Stable tag: 5.0.15
+Stable tag: 5.0.16
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,9 @@ Please leave us a good review rating. We appreciate your support.
 5. Integrated with Elementor Navigator and Contextual Menu
 
 == Changelog ==
+
+= 5.0.16 =
+* Tweak: Dynamic Visibility is now compatible with Elementor's Element caching feature
 
 = 5.0.15 =
 * Fix: Warning about textdomain being loaded too early

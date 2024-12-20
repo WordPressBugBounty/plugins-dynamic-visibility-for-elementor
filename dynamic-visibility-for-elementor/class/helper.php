@@ -7,12 +7,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/**
- * Main Helper Class
- *
- * @since 0.1.0
- */
-
 class Helper {
 	use Plugins;
 	use Filesystem;
@@ -30,6 +24,9 @@ class Helper {
 	use I18n;
 	use Validation;
 
+	/**
+	 * @var array<string>
+	 */
 	const ALLOWED_HTML_WRAPPER_TAGS = [
 		'article',
 		'aside',
@@ -50,6 +47,9 @@ class Helper {
 		'code',
 	];
 
+	/**
+	 * @var array<string>
+	 */
 	const NOT_ALLOWED_USER_FIELDS = [
 		'user_login',
 		'login',
