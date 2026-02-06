@@ -1,4 +1,7 @@
 <?php
+
+// SPDX-FileCopyrightText: 2018-2026 Ovation S.r.l. <help@dynamic.ooo>
+// SPDX-License-Identifier: GPL-3.0-or-later
 namespace DynamicVisibilityForElementor;
 
 trait I18n {
@@ -37,9 +40,9 @@ trait I18n {
 	/**
 	 * Returns the translated object ID(post_type or term) or original if missing
 	 *
-	 * @param int|string|array<mixed> $object_id The ID/s of the objects to check and return
-	 * @param object $type the object type: post, page, {custom post type name}, nav_menu, nav_menu_item, category, tag etc.
-	 * @return string|array<mixed>
+	 * @template T of int|string|array<int|string>
+	 * @param T $object_id The ID/s of the objects to check and return
+	 * @return ($object_id is array ? array<int|string> : ($object_id is string ? string : int))
 	 */
 	public static function wpml_translate_object_id( $object_id ) {
 		$current_language = apply_filters( 'wpml_current_language', null );
@@ -47,7 +50,7 @@ trait I18n {
 		if ( is_array( $object_id ) ) {
 			$translated_object_ids = array();
 			foreach ( $object_id as $id ) {
-				$translated_object_ids[] = apply_filters( 'wpml_object_id', $id, get_post_type( $id ), true, $current_language );
+				$translated_object_ids[] = apply_filters( 'wpml_object_id', $id, get_post_type( (int) $id ), true, $current_language );
 			}
 			return $translated_object_ids;
 		}
@@ -81,7 +84,7 @@ trait I18n {
 
 	public static function get_datatables_language() {
 		$locale2 = substr( get_locale(), 0, 2 );
-		$languages_whitelist = [ 'en', 'af', 'sq', 'am', 'ar', 'hy', 'az', 'bn', 'eu', 'be', 'bs', 'bg', 'ca', 'zh', 'co', 'hr', 'cs', 'da', 'nl', 'eo', 'et', 'fil', 'fu', 'fr', 'gl', 'ka', 'de', 'it', 'ja', 'kn', 'kk', 'km', 'ko', 'ku', 'ky', 'lo', 'lv', 'lt', 'mk', 'ms', 'mn', 'no', 'ps', 'fa', 'pl', 'pt', 'pa', 'ro', 'rm', 'ru', 'sr', 'snd', 'si', 'sk', 'sl', 'sw', 'sv', 'tg', 'ta', 'te', 'th', 'tr', 'uk', 'ur', 'uz', 'vi', 'cy' ];
+		$languages_whitelist = [ 'de', 'en', 'es', 'fr', 'it', 'ja', 'nl', 'pt', 'ru', 'zh' ];
 
 		if ( in_array( $locale2, $languages_whitelist, true ) ) {
 			return $locale2;

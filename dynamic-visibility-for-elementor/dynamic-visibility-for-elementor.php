@@ -4,16 +4,17 @@
  * Plugin Name: Dynamic Visibility for Elementor
  * Description: Visibility rules for widgets, containers, sections, columns or pages with advanced conditions and removing the element from the DOM.
  * Plugin URI: https://www.dynamic.ooo/widget/dynamic-visibility/?utm_source=wp-plugins&utm_campaign=plugin-uri&utm_medium=wp-dash
- * Version: 5.0.16
+ * Version: 6.0.2
  * Author: Dynamic.ooo
  * Author URI: https://www.dynamic.ooo/
  * Text Domain: dynamic-visibility-for-elementor
  * Requires at least: 5.2
- * Requires PHP: 5.6
+ * Requires PHP: 7.1
+ * Requires Plugins: elementor
  * License: GPL-3.0
  * License URI: http://www.gnu.org/licenses/gpl-3.0.txt
- * Elementor tested up to: 3.25.5
- * Elementor Pro tested up to: 3.25.2
+ * Elementor tested up to: 3.34.1
+ * Elementor Pro tested up to: 3.34.0
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

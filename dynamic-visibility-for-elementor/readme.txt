@@ -1,47 +1,86 @@
 === Dynamic Visibility for Elementor ===
 Contributors: dynamicooo
-Tags: elementor, visibility, hide, dynamic, container, widget
+Tags: elementor, hide, conditional, schedule, woocommerce
 Requires at least: 5.2
-Tested up to: 6.7.1
+Tested up to: 6.9
 Requires PHP: 7.1
-Stable tag: 5.0.16
+Stable tag: 6.0.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-Dynamic Visibility for Elementor allows you to hide any widget, container, section, column or the content of an entire page, removing the element from the DOM.
+Show or hide Elementor widgets, containers, columns, and pages based on user role, date, device, and many other powerful conditions.
 
 == Description ==
 
-Dynamic Visibility extension allows you to hide widgets, columns, containers, sections, or pages.
-It is particularly useful when you are building something that you don’t want to show everyone.
+**Build smarter websites with Dynamic Visibility for Elementor**
 
-It’s an Elementor extension, so you must install Elementor Free version (also working with Elementor Pro) before activating the plugin.
+Create personalized experiences by showing the right content to the right users at the right time. Perfect for membership sites, WooCommerce stores, landing pages, and content personalization.
 
-Note: As a plugin for Elementor, it only affects the visibility of content within the Elementor frontend pages
+= Key Features =
 
-- Choose an OR/AND condition.
-- Limit visibility for specific custom fields or pages.
-- Set a date (from–to), day of the week, or an hour and decide when each element will be visible.
-- Limit visibility for specific user roles, user meta, IP, referral, or users.
-- Limit visibility for WooCommerce products
-- Set a fallback text (e.g.: ‘Coming soon’) for hidden elements that will be displayed in place of the element.
+**User-Based Visibility**
+* User roles & capabilities
+* Logged-in or logged-out users
+* User metadata
+* IP address restrictions
 
-You can choose to hide the element via CSS or remove it from the DOM.
+**Time & Date Conditions**
+* Schedule content (from-to dates)
+* Day of the week
+* Time of day (hour range)
+* Perfect for limited-time offers and events
 
-[View full features, demo and more](https://www.dynamic.ooo/widget/dynamic-visibility-for-elementor/)
-[Try out the plugin on a free dummy site](https://demo.tastewp.com/dynamic-visibility-for-elementor)
+**Content & Context**
+* Custom field values
+* Specific pages or post types
+* Referral source (where users come from)
+* Browser & device detection
 
-What will you find in the paid version (Dynamic.ooo - Dynamic Content for Elementor)?
+**WooCommerce Integration**
+* Product visibility based on cart content
+* Product types
 
-- Custom condition, write your condition in PHP code without any limit
-- more than 140 features for Elementor
+**Flexible Display Options**
+* Hide via CSS or remove from DOM completely
+* Fallback content (e.g., "Coming soon", login form)
+* AND/OR logic for multiple conditions
+* Works with Events trigger for interactive reveals
 
-[Discover full plugin](https://www.dynamic.ooo)
+= Perfect For =
 
-= How it works =
+* **Membership Sites**: Show content only to subscribers
+* **WooCommerce**: Display special offers to specific customers
+* **Landing Pages**: A/B testing and personalization
+* **Maintenance Mode**: Hide sections under development
+* **GDPR Compliance**: Show cookie notices based on location
 
-Open a page in Elementor mode. Select your element, go to the Visibility tab.
-You'll find a new “Visibility” configuration. Open it, enable Visibility, and set it as you prefer.
+= How It Works =
+
+1. Edit any page with Elementor
+2. Select your widget, section, container or column
+3. Open the **Visibility** tab in Advanced settings
+4. Enable Dynamic Visibility and configure your conditions
+5. Save and preview!
+
+[More info](https://www.dynamic.ooo/dynamic-visibility-for-elementor/)
+[Try now on a sandbox](https://www.dynamic.ooo/dynamic-visibility-for-elementor/try)
+
+= Upgrade to Dynamic Content for Elementor =
+
+Get **150+ advanced features** including:
+
+* **Custom PHP Conditions**: Write unlimited custom logic
+* **Advanced Dynamic Tags**: Post data, user data, ACF fields, and more
+* **Template System**: Create reusable content templates
+* **Dynamic Posts Widget**: Advanced query builder
+* **Integrations**: ACF, JetEngine, Meta Box, Toolset, WooCommerce, WPML, Search and Filter Pro
+* **Premium Support**: Priority email support
+
+= Documentation & Support =
+
+* [Documentation](https://dnmc.ooo/visibilitydoc)
+* [Facebook Community](https://facebook.com/groups/dynamic.ooo)
+* Free support via WordPress.org forums
 
 == Installation ==
 
@@ -71,6 +110,25 @@ Please leave us a good review rating. We appreciate your support.
 5. Integrated with Elementor Navigator and Contextual Menu
 
 == Changelog ==
+
+= 6.0.2 = 
+* Tweak: compatibility tags for Elementor 3.34.1 and Elementor Pro 3.33.0
+* Tweak: added new comparison options: "Equal to (ignore case)", "Not equal to (ignore case)", "Less than or equal to", "Greater than or equal to", "Starts with", "Ends with", "Is not one of"
+
+= 6.0.1 = 
+* Tweak: compatibility tags for Elementor 3.33.0 and Elementor Pro 3.33.0
+* Fix: input controls in editor showing "The results could not be loaded" error
+* Fix: infinite loading spinner on controls with previously saved values
+
+= 6.0.0 = 
+* Notice: from this version is required PHP 7.1 or greater
+* Notice: from this version is required Elementor >= v3.3.0
+* Tweak: compatibility tags for Elementor 3.32.5 and Elementor Pro 3.32.3
+* Tweak: added "Deselect All Triggers" button
+* Tweak: anchor links can work together with JS Events triggers
+* Tweak: added PHP filter dynamicooo/dynamic-visibility/triggers to filter the list of the available triggers
+* Fix: User and Role trigger, IP detection now works correctly with CDN, proxy, and load balancer configurations
+* Minor fixes
 
 = 5.0.16 =
 * Tweak: Dynamic Visibility is now compatible with Elementor's Element caching feature

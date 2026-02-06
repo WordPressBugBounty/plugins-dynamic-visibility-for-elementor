@@ -256,7 +256,7 @@ jQuery(window).on('elementor:init', function () {
                 escapeMarkup: function escapeMarkup(markup) {
                     return markup;
                 },
-                minimumInputLength: 1
+                minimumInputLength: 2
             });
         },
 		// translate with an ajax post ids to post titles.
@@ -271,7 +271,13 @@ jQuery(window).on('elementor:init', function () {
                 ids = [ids];
             }
 			// no translation needed for these query types:
-			if(queryType === 'pods' || queryType === 'acf') {
+			if (
+				queryType === 'pods' ||
+				queryType === 'jet' ||
+				queryType === 'metabox' ||
+				queryType === 'metabox_relationship' ||
+				queryType === 'options'
+			) {
 				let t = {}
 				for (id of ids) {
 					t[id] = id; // Label is the same as the value.

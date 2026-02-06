@@ -1,11 +1,12 @@
 <?php
+
+// SPDX-FileCopyrightText: 2018-2026 Ovation S.r.l. <help@dynamic.ooo>
+// SPDX-License-Identifier: GPL-3.0-or-later
 namespace DynamicVisibilityForElementor;
 
 trait Options {
 
 	/**
-	 * Get Dynamic Tags Categories
-	 *
 	 * @return array<string>
 	 */
 	public static function get_dynamic_tags_categories() {
@@ -25,54 +26,39 @@ trait Options {
 	}
 
 	/**
-	 * Compare options
-	 *
 	 * @return array<string,mixed>
 	 */
-	public static function compare_options() {
+	public static function get_compare_options() {
 		return [
-			'not' => [
-				'title' => esc_html__( 'Not set or empty', 'dynamic-visibility-for-elementor' ),
-				'icon' => 'eicon-circle-o',
-			],
-			'isset' => [
-				'title' => esc_html__( 'Valorized with any value', 'dynamic-visibility-for-elementor' ),
-				'icon' => 'eicon-dot-circle-o',
-			],
-			'lt' => [
-				'title' => esc_html__( 'Less than', 'dynamic-visibility-for-elementor' ),
-				'icon' => 'fa fa-angle-left',
-			],
-			'gt' => [
-				'title' => esc_html__( 'Greater than', 'dynamic-visibility-for-elementor' ),
-				'icon' => 'fa fa-angle-right',
-			],
-			'contain' => [
-				'title' => esc_html__( 'Contains', 'dynamic-visibility-for-elementor' ),
-				'icon' => 'eicon-check',
-			],
-			'not_contain' => [
-				'title' => esc_html__( 'Doesn\'t contain', 'dynamic-visibility-for-elementor' ),
-				'icon' => 'eicon-close',
-			],
-			'in_array' => [
-				'title' => esc_html__( 'In Array', 'dynamic-visibility-for-elementor' ),
-				'icon' => 'fa fa-bars',
-			],
-			'value' => [
-				'title' => esc_html__( 'Equal to', 'dynamic-visibility-for-elementor' ),
-				'icon' => 'fa fa-circle',
-			],
-			'not_value' => [
-				'title' => esc_html__( 'Not Equal to', 'dynamic-visibility-for-elementor' ),
-				'icon' => 'eicon-exchange',
-			],
+			// Empty checks
+			'isset' => esc_html__( 'Not empty', 'dynamic-visibility-for-elementor' ),
+			'not' => esc_html__( 'Empty or not set', 'dynamic-visibility-for-elementor' ),
+
+			// Equality comparisons
+			'value' => esc_html__( 'Equal to', 'dynamic-visibility-for-elementor' ),
+			'value_i' => esc_html__( 'Equal to (ignore case)', 'dynamic-visibility-for-elementor' ),
+			'not_value' => esc_html__( 'Not equal to', 'dynamic-visibility-for-elementor' ),
+			'not_value_i' => esc_html__( 'Not equal to (ignore case)', 'dynamic-visibility-for-elementor' ),
+
+			// Numeric comparisons
+			'lt' => esc_html__( 'Less than', 'dynamic-visibility-for-elementor' ),
+			'lte' => esc_html__( 'Less than or equal to', 'dynamic-visibility-for-elementor' ),
+			'gt' => esc_html__( 'Greater than', 'dynamic-visibility-for-elementor' ),
+			'gte' => esc_html__( 'Greater than or equal to', 'dynamic-visibility-for-elementor' ),
+
+			// String comparisons
+			'contain' => esc_html__( 'Contains', 'dynamic-visibility-for-elementor' ),
+			'not_contain' => esc_html__( 'Does not contain', 'dynamic-visibility-for-elementor' ),
+			'starts_with' => esc_html__( 'Starts with', 'dynamic-visibility-for-elementor' ),
+			'ends_with' => esc_html__( 'Ends with', 'dynamic-visibility-for-elementor' ),
+
+			// Array operations
+			'in_array' => esc_html__( 'Is one of', 'dynamic-visibility-for-elementor' ),
+			'not_in_array' => esc_html__( 'Is not one of', 'dynamic-visibility-for-elementor' ),
 		];
 	}
 
 	/**
-	 * Get Post Order By Options
-	 *
 	 * @return array<string,string>
 	 */
 	public static function get_post_orderby_options() {
@@ -96,8 +82,6 @@ trait Options {
 	}
 
 	/**
-	 * Get Order By Meta Value - Types
-	 *
 	 * @return array<string,string>
 	 */
 	public static function get_post_orderby_meta_value_types() {
@@ -115,8 +99,18 @@ trait Options {
 	}
 
 	/**
-	 * Get Term Order By Options
-	 *
+	 * @return array<string,string>
+	 */
+	public static function get_woo_orderby_options() {
+		return [
+			'date' => esc_html__( 'Date', 'dynamic-visibility-for-elementor' ),
+			'title' => esc_html__( 'Title', 'dynamic-visibility-for-elementor' ),
+			'id' => esc_html__( 'ID', 'dynamic-visibility-for-elementor' ),
+			'menu_order' => esc_html__( 'Menu Order', 'dynamic-visibility-for-elementor' ),
+		];
+	}
+
+	/**
 	 * @return array<string,string>
 	 */
 	public static function get_term_orderby_options() {
@@ -132,8 +126,6 @@ trait Options {
 	}
 
 	/**
-	 * Get Public Taxonomies
-	 *
 	 * @return array<string,string>
 	 */
 	public static function get_public_taxonomies() {
@@ -149,6 +141,9 @@ trait Options {
 		return $taxonomy_array;
 	}
 
+	/**
+	 * @return array<string,string>
+	 */
 	public static function get_anim_timing_functions() {
 		$tf_p = [
 			'linear' => esc_html__( 'Linear', 'dynamic-visibility-for-elementor' ),
@@ -172,8 +167,11 @@ trait Options {
 		return $tf_p;
 	}
 
+	/**
+	 * @return array<string,string>
+	 */
 	public static function number_format_currency() {
-		$nf_c = [
+		return [
 			'en-US' => esc_html__( 'English (US)', 'dynamic-visibility-for-elementor' ),
 			'af-ZA' => esc_html__( 'Afrikaans', 'dynamic-visibility-for-elementor' ),
 			'sq-AL' => esc_html__( 'Albanian', 'dynamic-visibility-for-elementor' ),
@@ -282,21 +280,25 @@ trait Options {
 			'yi-DE' => esc_html__( 'Yiddish', 'dynamic-visibility-for-elementor' ),
 			'zu-ZA' => esc_html__( 'Zulu', 'dynamic-visibility-for-elementor' ),
 		];
-		return $nf_c;
 	}
 
-	public static function get_gsap_ease() {
-		$tf_p = [
+	/**
+	 * @return array<string,string>
+	 */
+	public static function get_ease() {
+		return [
 			'easeNone' => esc_html__( 'None', 'dynamic-visibility-for-elementor' ),
 			'easeIn' => esc_html__( 'In', 'dynamic-visibility-for-elementor' ),
 			'easeOut' => esc_html__( 'Out', 'dynamic-visibility-for-elementor' ),
 			'easeInOut' => esc_html__( 'InOut', 'dynamic-visibility-for-elementor' ),
 		];
-		return $tf_p;
 	}
 
-	public static function get_gsap_timing_functions() {
-		$tf_p = [
+	/**
+	 * @return array<string,string>
+	 */
+	public static function get_timing_functions() {
+		return [
 			'Power0' => esc_html__( 'Linear', 'dynamic-visibility-for-elementor' ),
 			'Power1' => esc_html__( 'Power1', 'dynamic-visibility-for-elementor' ),
 			'Power2' => esc_html__( 'Power2', 'dynamic-visibility-for-elementor' ),
@@ -310,11 +312,13 @@ trait Options {
 			'Expo' => esc_html__( 'Expo', 'dynamic-visibility-for-elementor' ),
 			'Sine' => esc_html__( 'Sine', 'dynamic-visibility-for-elementor' ),
 		];
-		return $tf_p;
 	}
 
+	/**
+	 * @return array<int,array<string,array<string,string>|string>>
+	 */
 	public static function get_anim_in() {
-		$anim = [
+		return [
 			[
 				'label' => 'Fading',
 				'options' => [
@@ -392,11 +396,13 @@ trait Options {
 				],
 			],
 		];
-		return $anim;
 	}
 
+	/**
+	 * @return array<int,array<string,array<string,string>|string>>
+	 */
 	public static function get_anim_out() {
-		$anim = [
+		return [
 			[
 				'label' => 'Fading',
 				'options' => [
@@ -474,11 +480,13 @@ trait Options {
 				],
 			],
 		];
-		return $anim;
 	}
 
+	/**
+	 * @return array<string,string>
+	 */
 	public static function get_anim_open() {
-		$anim_p = [
+		return [
 			'noneIn' => _x( 'None', 'Ajax Page', 'dynamic-visibility-for-elementor' ),
 			'enterFromFade' => _x( 'Fade', 'Ajax Page', 'dynamic-visibility-for-elementor' ),
 			'enterFromLeft' => _x( 'Left', 'Ajax Page', 'dynamic-visibility-for-elementor' ),
@@ -492,12 +500,13 @@ trait Options {
 			'flipInTop' => _x( 'Flip Top', 'Ajax Page', 'dynamic-visibility-for-elementor' ),
 			'flipInBottom' => _x( 'Flip Bottom', 'Ajax Page', 'dynamic-visibility-for-elementor' ),
 		];
-
-		return $anim_p;
 	}
 
+	/**
+	 * @return array<string,string>
+	 */
 	public static function get_anim_close() {
-		$anim_p = [
+		return [
 			'noneOut' => _x( 'None', 'Ajax Page', 'dynamic-visibility-for-elementor' ),
 			'exitToFade' => _x( 'Fade', 'Ajax Page', 'dynamic-visibility-for-elementor' ),
 			'exitToLeft' => _x( 'Left', 'Ajax Page', 'dynamic-visibility-for-elementor' ),
@@ -511,9 +520,11 @@ trait Options {
 			'flipOutTop' => _x( 'Flip Top', 'Ajax Page', 'dynamic-visibility-for-elementor' ),
 			'flipOutBottom' => _x( 'Flip Bottom', 'Ajax Page', 'dynamic-visibility-for-elementor' ),
 		];
-		return $anim_p;
 	}
 
+	/**
+	 * @return array<string,string>
+	 */
 	public static function bootstrap_button_sizes() {
 		return [
 			'xs' => esc_html__( 'Extra Small', 'dynamic-visibility-for-elementor' ),
@@ -524,6 +535,9 @@ trait Options {
 		];
 	}
 
+	/**
+	 * @return array<string,string>
+	 */
 	public static function get_sql_operators() {
 		$compare = self::get_wp_meta_compare();
 		$compare['IS NULL'] = 'IS NULL';
@@ -531,6 +545,9 @@ trait Options {
 		return $compare;
 	}
 
+	/**
+	 * @return array<string,string>
+	 */
 	public static function get_wp_meta_compare() {
 		return [
 			'=' => '=',
@@ -553,22 +570,9 @@ trait Options {
 		];
 	}
 
-	public static function get_gravatar_styles() {
-		$gravatar_images = array(
-			'404' => esc_html__( '404 (empty with fallback)', 'dynamic-visibility-for-elementor' ),
-			'retro' => esc_html__( '8bit', 'dynamic-visibility-for-elementor' ),
-			'monsterid' => esc_html__( 'Monster (Default)', 'dynamic-visibility-for-elementor' ),
-			'wavatar' => esc_html__( 'Cartoon face', 'dynamic-visibility-for-elementor' ),
-			'indenticon' => esc_html__( 'The Quilt', 'dynamic-visibility-for-elementor' ),
-			'mp' => esc_html__( 'Mystery', 'dynamic-visibility-for-elementor' ),
-			'mm' => esc_html__( 'Mystery Man', 'dynamic-visibility-for-elementor' ),
-			'robohash' => esc_html__( 'RoboHash', 'dynamic-visibility-for-elementor' ),
-			'blank' => esc_html__( 'Transparent GIF', 'dynamic-visibility-for-elementor' ),
-			'gravatar_default' => esc_html__( 'The Gravatar logo', 'dynamic-visibility-for-elementor' ),
-		);
-		return $gravatar_images;
-	}
-
+	/**
+	 * @return array<string,string>
+	 */
 	public static function get_post_formats() {
 		return [
 			'standard' => esc_html__( 'Standard', 'dynamic-visibility-for-elementor' ),
@@ -584,6 +588,9 @@ trait Options {
 		];
 	}
 
+	/**
+	 * @return array<string,string>
+	 */
 	public static function get_button_sizes() {
 		return [
 			'xs' => esc_html__( 'Extra Small', 'dynamic-visibility-for-elementor' ),
@@ -594,6 +601,9 @@ trait Options {
 		];
 	}
 
+	/**
+	 * @return array<string,string>
+	 */
 	public static function get_jquery_display_mode() {
 		return [
 			'' => esc_html__( 'None', 'dynamic-visibility-for-elementor' ),
@@ -602,26 +612,8 @@ trait Options {
 		];
 	}
 
-	public static function get_string_comparison() {
-		return [
-			'empty' => esc_html__( 'empty', 'dynamic-visibility-for-elementor' ),
-			'not_empty' => esc_html__( 'not empty', 'dynamic-visibility-for-elementor' ),
-			'equal_to' => esc_html__( 'equals to', 'dynamic-visibility-for-elementor' ),
-			'not_equal' => esc_html__( 'not equals', 'dynamic-visibility-for-elementor' ),
-			'gt' => esc_html__( 'greater than', 'dynamic-visibility-for-elementor' ),
-			'ge' => esc_html__( 'greater than or equal', 'dynamic-visibility-for-elementor' ),
-			'lt' => esc_html__( 'less than', 'dynamic-visibility-for-elementor' ),
-			'le' => esc_html__( 'less than or equal', 'dynamic-visibility-for-elementor' ),
-			'contain' => esc_html__( 'contains', 'dynamic-visibility-for-elementor' ),
-			'not_contain' => esc_html__( 'not contains', 'dynamic-visibility-for-elementor' ),
-			'is_checked' => esc_html__( 'is checked', 'dynamic-visibility-for-elementor' ),
-			'not_checked' => esc_html__( 'not checked', 'dynamic-visibility-for-elementor' ),
-		];
-	}
 
 	/**
-	 * Get HTML Tags
-	 *
 	 * @param array<string> $tags_to_add
 	 * @param bool $add_none
 	 * @return array<string,string>

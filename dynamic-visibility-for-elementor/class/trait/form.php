@@ -1,4 +1,7 @@
 <?php
+
+// SPDX-FileCopyrightText: 2018-2026 Ovation S.r.l. <help@dynamic.ooo>
+// SPDX-License-Identifier: GPL-3.0-or-later
 namespace DynamicVisibilityForElementor;
 
 use ElementorPro\Core\Utils;
@@ -16,10 +19,10 @@ trait Form {
 		return array_values( $field_settings )[0];
 	}
 
-	/**
-	 * -!h- Don't allow the evaluation of tokens in form fields for security
-	 *  reasons.
-	 */
+	
+
+
+
 	public static function sanitize_form_field( $str ) {
 		return preg_replace( '/\[([\w-]+)([:|\]])/', '[ $1 $2', $str );
 	}
@@ -87,7 +90,7 @@ trait Form {
 			}
 		}
 		if ( ! $this_page && isset( $_POST['post_id'] ) ) {
-			$this_page = get_post( intval( $_POST['post_id'] ) );
+			$this_page = get_post( absint( $_POST['post_id'] ) );
 		}
 
 		return [
@@ -116,14 +119,12 @@ trait Form {
 			if ( strpos( $setting, '[field id=' ) !== false ) {
 				foreach ( $fields as $fkey => $fvalue ) {
 					if ( ! is_object( $fvalue ) ) {
-						$fvalue = self::to_string( $fvalue );
+						$fvalue = self::to_readable_string( $fvalue );
 						if ( $urlencode ) {
 							$fvalue = urlencode( $fvalue );
 						}
-						if ( ! is_object( $fvalue ) ) {
-							$setting = str_replace( '[field id=' . $fkey . ']', $fvalue, $setting );
-							$setting = str_replace( '[field id="' . $fkey . '"]', $fvalue, $setting );
-						}
+						$setting = str_replace( '[field id=' . $fkey . ']', $fvalue, $setting );
+						$setting = str_replace( '[field id="' . $fkey . '"]', $fvalue, $setting );
 					}
 				}
 			}

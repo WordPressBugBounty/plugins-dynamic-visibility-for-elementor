@@ -1,4 +1,7 @@
 <?php
+
+// SPDX-FileCopyrightText: 2018-2026 Ovation S.r.l. <help@dynamic.ooo>
+// SPDX-License-Identifier: GPL-3.0-or-later
 namespace DynamicVisibilityForElementor\Controls;
 
 use Elementor\Control_Select2;
@@ -8,9 +11,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-/**
- * Elementor Control Query
- */
 class Control_OOO_Query extends Control_Select2 {
 
 

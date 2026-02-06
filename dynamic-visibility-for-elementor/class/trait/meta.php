@@ -1,4 +1,7 @@
 <?php
+
+// SPDX-FileCopyrightText: 2018-2026 Ovation S.r.l. <help@dynamic.ooo>
+// SPDX-License-Identifier: GPL-3.0-or-later
 namespace DynamicVisibilityForElementor;
 
 trait Meta {
@@ -94,84 +97,88 @@ trait Meta {
 	}
 
 	public static function get_user_metas( $grouped = false, $like = '', $info = true ) {
-		$userMetasGrouped = array();
-		$userMetas = $userMetasGrouped;
+		$user_metas_grouped = array();
+		$user_metas = $user_metas_grouped;
 
 		// ACF
-		$acf_groups = get_posts(array(
-			'post_type' => 'acf-field-group',
-			'numberposts' => -1,
-			'post_status' => 'publish',
-			'suppress_filters' => false,
-		));
-		if ( ! empty( $acf_groups ) ) {
-			foreach ( $acf_groups as $aacf_group ) {
-				$is_user_group = in_array( 'user', self::get_acf_group_locations( $aacf_group ) );
-				$aacf_meta = maybe_unserialize( $aacf_group->post_content );
-				if ( $is_user_group ) {
-					$acf = get_posts(array(
-						'post_type' => 'acf-field',
-						'numberposts' => -1,
-						'post_status' => 'publish',
-						'post_parent' => $aacf_group->ID,
-						'suppress_filters' => false,
-					));
-					if ( ! empty( $acf ) ) {
-						foreach ( $acf as $aacf ) {
-							$aacf_meta = maybe_unserialize( $aacf->post_content );
-							if ( $like ) {
-								$pos_key = stripos( $aacf->post_excerpt, $like );
-								$pos_name = stripos( $aacf->post_title, $like );
-								if ( $pos_key === false && $pos_name === false ) {
-									continue;
+		if ( Helper::is_plugin_active( 'acf' ) ) {
+			$acf_groups = acf_get_field_groups();
+			if ( ! empty( $acf_groups ) ) {
+				foreach ( $acf_groups as $group ) {
+					$locations = self::get_acf_group_locations( $group['key'] );
+					if ( in_array( 'user', $locations ) ) {
+						$fields = acf_get_fields( $group['key'] );
+						if ( ! empty( $fields ) ) {
+							foreach ( $fields as $field ) {
+								if ( $like ) {
+									$pos_key = stripos( $field['name'], $like );
+									$pos_label = stripos( $field['label'], $like );
+									if ( $pos_key === false && $pos_label === false ) {
+										continue;
+									}
 								}
+								$field_name = $field['label'];
+								if ( $info ) {
+									$field_name .= ' [' . $field['type'] . ']';
+								}
+								$user_metas[ $field['name'] ] = $field_name;
+								$user_metas_grouped['ACF'][ $field['name'] ] = $field_name;
 							}
-							$field_name = $aacf->post_title;
-							if ( $info ) {
-								$field_name .= ' [' . $aacf_meta['type'] . ']';
-							}
-							$userMetas[ $aacf->post_excerpt ] = $field_name;
-							$userMetasGrouped['ACF'][ $aacf->post_excerpt ] = $userMetas[ $aacf->post_excerpt ];
 						}
 					}
 				}
 			}
 		}
 
-		// MANUAL
-		global $wpdb;
-		if ( ! is_multisite() ) {
-			$table = $wpdb->prefix . 'usermeta';
-		} else {
-			$table = $wpdb->get_blog_prefix( get_main_site_id() ) . 'usermeta';
+		// Standard WordPress user meta + current user custom meta
+		$standard_user_meta = [
+			'first_name',
+			'last_name',
+			'nickname',
+			'description',
+			'locale',
+			'avatar',
+			'syntax_highlighting',
+			'rich_editing',
+			'show_admin_bar_front',
+			'admin_color',
+			'comment_shortcuts',
+			'use_ssl',
+		];
+
+		foreach ( $standard_user_meta as $meta_key ) {
+			if ( $like && stripos( $meta_key, $like ) === false ) {
+				continue;
+			}
+			if ( ! isset( $user_metas[ $meta_key ] ) ) {
+				$user_metas[ $meta_key ] = $meta_key;
+				$user_metas_grouped['META'][ $meta_key ] = $meta_key;
+			}
 		}
 
-		if ( defined( 'CUSTOM_USER_META_TABLE' ) ) {
-			$table = CUSTOM_USER_META_TABLE;
-		}
-		$query = 'SELECT DISTINCT meta_key FROM ' . esc_sql( $table );
-		if ( $like ) {
-			$query .= $wpdb->prepare( ' WHERE meta_key LIKE %s', '%' . $wpdb->esc_like( $like ) . '%' );
-		}
-		$results = $wpdb->get_results( $query );
-		if ( ! empty( $results ) ) {
-			$metas = array();
-			foreach ( $results as $key => $auser ) {
-				$metas[ $auser->meta_key ] = $auser->meta_key;
-			}
-			ksort( $metas );
-			$manual_metas = $metas;
-			foreach ( $manual_metas as $ameta ) {
-				$userMetas[ $ameta ] = $ameta;
-				$userMetasGrouped['META'][ $ameta ] = $ameta;
+		$user_id = get_current_user_id();
+		if ( $user_id ) {
+			$user_meta = get_user_meta( $user_id );
+			if ( is_array( $user_meta ) ) {
+				$meta_keys = array_keys( $user_meta );
+				sort( $meta_keys );
+				foreach ( $meta_keys as $meta_key ) {
+					if ( $like && stripos( $meta_key, $like ) === false ) {
+						continue;
+					}
+					if ( ! isset( $user_metas[ $meta_key ] ) ) {
+						$user_metas[ $meta_key ] = $meta_key;
+						$user_metas_grouped['META'][ $meta_key ] = $meta_key;
+					}
+				}
 			}
 		}
 
 		if ( $grouped ) {
-			return $userMetasGrouped;
+			return $user_metas_grouped;
 		}
 
-		return $userMetas;
+		return $user_metas;
 	}
 
 	public static function get_term_metas( $grouped = false, $like = '' ) {
@@ -240,44 +247,11 @@ trait Meta {
 		return $termMetas;
 	}
 
-	public static function get_post_meta( $post_id, $meta_key, $single = false, $plugin = true, $fallback = true ) {
-
-		$meta_value = false;
-
-		if ( ! $post_id ) {
-			$post_id = get_the_ID();
-		}
-
-		if ( ! $plugin || $fallback ) {
-			$meta_value = get_post_meta( $post_id, $meta_key, $single );
-		}
-
-		if ( $plugin ) {
-			// https://docs.elementor.com/article/381-elementor-integration-with-acf
-			if ( Helper::is_acf_active() ) {
-				$acf_fields = self::get_acf_fields();
-				if ( ! empty( $acf_fields ) && array_key_exists( $meta_key, $acf_fields ) ) {
-					// https://www.advancedcustomfields.com/resources/
-					$meta_value = self::get_acf_field_value( $meta_key, $post_id );
-				}
-			}
-
-			// https://docs.elementor.com/article/385-elementor-integration-with-pods
-			if ( Helper::is_plugin_active( 'pods' ) ) {
-				$pods_fields = array_keys( self::get_pods_fields() );
-				if ( ! empty( $pods_fields ) && in_array( $meta_key, $pods_fields, true ) ) {
-					$meta_value = wp_kses_post( pods_field_display( $meta_key, $post_id ) );
-				}
-			}
-		}
-
-		return $meta_value;
-	}
 
 	public static function get_post_meta_name( $meta_key ) {
 
 		// ACF
-		if ( self::is_acf_active() ) {
+		if ( self::is_plugin_active( 'acf' ) ) {
 			$acf = get_field_object( $meta_key );
 			if ( $acf ) {
 				return $acf['label'];
@@ -299,7 +273,7 @@ trait Meta {
 		$meta_type = 'text';
 
 		// ACF
-		if ( self::is_acf_active() ) {
+		if ( self::is_plugin_active( 'acf' ) ) {
 			global $wpdb;
 			$sql = 'SELECT post_content FROM ' . $wpdb->prefix . 'posts WHERE post_excerpt = %s AND post_type = "acf-field";';
 			$prepared_sql = $wpdb->prepare( $sql, $meta_key );
@@ -401,7 +375,7 @@ trait Meta {
 		}
 
 		// ACF
-		if ( self::is_acf_active() ) {
+		if ( self::is_plugin_active( 'acf' ) ) {
 			// ACF
 			$acf_groups = get_posts(array(
 				'post_type' => 'acf-field-group',
@@ -693,7 +667,7 @@ trait Meta {
 	 * @return array<int|string,mixed>
 	 */
 	public static function get_acf_fields( $types = null ) {
-		if ( ! Helper::is_acf_active() ) {
+		if ( ! Helper::is_plugin_active( 'acf' ) ) {
 			return [];
 		}
 
@@ -770,7 +744,7 @@ trait Meta {
 	}
 
 	public static function get_acf_flexible_content_sub_fields_by_row( $key, $row ) {
-		if ( ! self::is_acf_active() ) {
+		if ( ! self::is_plugin_active( 'acf' ) ) {
 			return [];
 		}
 		$fields = get_field( $key );
@@ -789,113 +763,6 @@ trait Meta {
 		}
 		unset( $sub_fields[0]['acf_fc_layout'] );
 		return $sub_fields[0] ?? [];
-	}
-
-	/**
-	 * Get ACF repeater sub fields using native ACF functions
-	 *
-	 * @param string $key The field key or name of the repeater field
-	 * @return array<string> Array of sub field names
-	 */
-	public static function get_acf_repeater_sub_fields_list( $key ) {
-		// Check if result is already cached
-		if ( isset( self::$meta_fields[ $key ]['sub_fields'] ) ) {
-			return self::$meta_fields[ $key ]['sub_fields'];
-		}
-
-		if ( ! self::is_acf_active() ) {
-			return [];
-		}
-
-		$field = acf_get_field( $key );
-
-		if ( ! $field || $field['type'] !== 'repeater' ) {
-			return [];
-		}
-
-		$sub_fields = [];
-		if ( ! empty( $field['sub_fields'] ) ) {
-			foreach ( $field['sub_fields'] as $sub_field ) {
-				$sub_fields[] = $sub_field['name'];
-			}
-		}
-
-		// Store result in cache
-		self::$meta_fields[ $key ]['sub_fields'] = $sub_fields;
-
-		return $sub_fields;
-	}
-
-	/**
-	 * Retrieves the values of all sub fields for the current repeater row
-	 * Must be called within an ACF repeater loop
-	 *
-	 * @param array<string> $sub_fields_list Array of field names to retrieve
-	 * @return array<string,mixed> Array of field values indexed by field name
-	 */
-	public static function get_acf_repeater_current_values( $sub_fields_list ) {
-		// Get current row information from ACF loop
-		$row = acf_get_loop( 'active' );
-		if ( ! $row ) {
-			return [];
-		}
-
-		// Create unique cache key based on current row
-		$cache_key = $row['selector'] . '_' . $row['i'];
-
-		// Check if values for this row are already cached
-		if ( isset( self::$meta_fields[ $cache_key ]['row_values'] ) ) {
-			return self::$meta_fields[ $cache_key ]['row_values'];
-		}
-
-		$row_data = [];
-
-		if ( ! is_array( $sub_fields_list ) ) {
-			return $row_data;
-		}
-
-		// Get value for each field in the list
-		foreach ( $sub_fields_list as $field_name ) {
-			if ( is_string( $field_name ) ) {
-				$row_data[ $field_name ] = get_sub_field( $field_name );
-			}
-		}
-
-		// Store values in cache
-		self::$meta_fields[ $cache_key ]['row_values'] = $row_data;
-
-		return $row_data;
-	}
-
-	/**
-	 * Get Repeater Field Labels
-	 *
-	 * Retrieves the labels of repeater subfields, either all of them or only selected ones
-	 *
-	 * @param string $repeater_field_name
-	 * @param int|string $id_page
-	 * @param array<string>|null $selected_fields
-	 * @return array<string>
-	 */
-	public static function get_acf_repeater_field_labels( $repeater_field_name, $id_page, $selected_fields = null ) {
-		$labels = [];
-
-		$repeater_field = get_field_object( $repeater_field_name, $id_page );
-
-		if ( ! empty( $repeater_field['sub_fields'] ) ) {
-			foreach ( $repeater_field['sub_fields'] as $sub_field ) {
-				// If selected fields are specified, include only those
-				if ( $selected_fields !== null ) {
-					if ( in_array( $sub_field['name'], array_column( $selected_fields, 'dce_acf_repeater_field_name' ) ) ) {
-						$labels[] = $sub_field['label'];
-					}
-				} else {
-					$labels[] = $sub_field['label'];
-				}
-			}
-		}
-
-		return $labels;
 	}
 
 	public static function get_acf_field_id( $key, $multi = false ) {
@@ -984,7 +851,7 @@ trait Meta {
 		// Check if the ACF loop is already active, unless bypassing is enabled
 		if ( ! $bypass_loop_check ) {
 			if ( acf_get_loop( 'active' ) ) {
-				$sub_field_value = get_sub_field( $idField );
+				$sub_field_value = get_sub_field( $idField, $format );
 				if ( $sub_field_value !== false ) {
 					return $sub_field_value;
 				}
@@ -1011,7 +878,7 @@ trait Meta {
 						the_row();
 					}
 				}
-				$sub_field_value = get_sub_field( $idField );
+				$sub_field_value = get_sub_field( $idField, $format );
 				if ( $sub_field_value !== false ) {
 					return $sub_field_value;
 				}

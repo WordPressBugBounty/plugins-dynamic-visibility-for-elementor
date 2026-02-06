@@ -1,5 +1,8 @@
 <?php
 
+// SPDX-FileCopyrightText: 2018-2026 Ovation S.r.l. <help@dynamic.ooo>
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 namespace DynamicVisibilityForElementor\Modules\QueryControl;
 
 use Elementor\Core\Editor\Editor;
@@ -413,7 +416,7 @@ class Module extends Base_Module {
 			throw new \Exception( 'Access denied.' );
 		}
 
-		if ( ! Helper::is_jetengine_active() ) {
+		if ( ! Helper::is_plugin_active( 'jet-engine' ) ) {
 			return [];
 		}
 
@@ -467,7 +470,7 @@ class Module extends Base_Module {
 			throw new \Exception( 'Access denied.' );
 		}
 
-		if ( ! Helper::is_metabox_active() ) {
+		if ( ! Helper::is_plugin_active( 'metabox' ) ) {
 			return [];
 		}
 
@@ -516,7 +519,7 @@ class Module extends Base_Module {
 			throw new \Exception( 'Access denied.' );
 		}
 
-		if ( ! Helper::is_metabox_active() ) {
+		if ( ! Helper::is_plugin_active( 'metabox' ) ) {
 			return [];
 		}
 
@@ -539,29 +542,122 @@ class Module extends Base_Module {
 		return $results;
 	}
 
+	/**
+	 * Retrieves all ACF fields recursively and filters them by the search term if provided.
+	 *
+	 * @param array<string,mixed> $data Array of request data. Expects 'q' as the search term.
+	 * @return array<int,array<string,string>> Returns an array of items ready for Select2 in the format:
+	 *                                         [ ['id' => 'field_key', 'text' => 'Field Label'], ... ]
+	 * @throws \Exception If the current user lacks the required capability.
+	 */
 	protected function get_acf( $data ) {
-		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+		if ( ! current_user_can( \Elementor\Core\Editor\Editor::EDITING_CAPABILITY ) ) {
 			throw new \Exception( 'Access denied.' );
 		}
 
-		$results = [];
-		$types = ( ! empty( $data['object_type'] ) ) ? $data['object_type'] : array();
-		$acfs = Helper::get_acf_fields( $types );
-		if ( ! empty( $acfs ) ) {
-			foreach ( $acfs as $akey => $acf ) {
-				if ( strlen( $data['q'] ) > 2 ) {
-					if ( strpos( (string) $akey, $data['q'] ) === false && strpos( (string) $acf, $data['q'] ) === false ) {
-						continue;
-					}
+		$search = $data['q'] ?? '';
+		$results_assoc = [];
+
+		/** @var array<int,array<string,mixed>> $field_groups */
+		$field_groups = acf_get_field_groups();
+
+		// Recursively collect all ACF fields from each group
+		foreach ( $field_groups as $group ) {
+			/** @var array<string,mixed>|false|null $fields */
+			$fields = acf_get_fields( $group );
+			if ( is_array( $fields ) ) {
+				foreach ( $fields as $field ) {
+					$this->collect_acf_fields_recursively( $field, '', $results_assoc );
 				}
-				$results[] = [
-					'id' => $akey,
-					'text' => esc_attr( $acf ),
-				];
 			}
 		}
-		return $results;
+
+		// Filter results if a search term is provided
+		if ( ! empty( $search ) ) {
+			$results_assoc = array_filter(
+				$results_assoc,
+				function ( $field_label, $field_key ) use ( $search ) {
+					return (
+						stripos( $field_key, $search ) !== false
+						|| stripos( $field_label, $search ) !== false
+					);
+				},
+				ARRAY_FILTER_USE_BOTH
+			);
+		}
+
+		$return = [];
+		foreach ( $results_assoc as $field_key => $field_label ) {
+			$return[] = [
+				'id'   => $field_key,
+				'text' => esc_attr( $field_label ),
+			];
+		}
+
+		return $return;
 	}
+
+	/**
+	* Collects ACF fields recursively, building concatenated keys for group sub-fields.
+	*
+	* When encountering a group field, the current prefix is concatenated with an underscore.
+	* When encountering a repeater or flexible content field, the prefix is reset (i.e. set to an empty string)
+	* so that sub-fields inside these fields do not inherit the parent's prefix.
+	*
+	* @param array<string,mixed> $field   The ACF field definition.
+	* @param string              $prefix  The current prefix used for nested fields.
+	* @param array<string,string> &$results Reference array mapping 'field_key' => 'Field Label'.
+	* @return void
+	*/
+	protected function collect_acf_fields_recursively( $field, $prefix, &$results ) {
+		// Retrieve field name and type
+		$field_name = isset( $field['name'] ) ? (string) $field['name'] : '';
+		$field_type = isset( $field['type'] ) ? $field['type'] : '';
+
+		// Handle group fields: do not add the group itself, but use its name as prefix for its children.
+		if ( 'group' === $field_type ) {
+			$new_prefix = $prefix ? $prefix . '_' . $field_name : $field_name;
+			if ( ! empty( $field['sub_fields'] ) && is_array( $field['sub_fields'] ) ) {
+				foreach ( $field['sub_fields'] as $sub_field ) {
+					$this->collect_acf_fields_recursively( $sub_field, $new_prefix, $results );
+				}
+			}
+			return; // Do not add the group field itself.
+		}
+
+		// Handle repeater and flexible content fields:
+		// For these, add the repeater field itself (with any existing prefix) but then reset the prefix for its children.
+		if ( 'repeater' === $field_type || 'flexible_content' === $field_type ) {
+			$current_key = $prefix ? $prefix . '_' . $field_name : $field_name;
+			// Add the repeater field itself.
+			$results[ $current_key ] = isset( $field['label'] ) && ! empty( $field['label'] ) ? (string) $field['label'] : $field_name;
+			// Reset the prefix for sub-fields inside the repeater.
+			$new_prefix = '';
+			if ( ! empty( $field['sub_fields'] ) && is_array( $field['sub_fields'] ) ) {
+				foreach ( $field['sub_fields'] as $sub_field ) {
+					$this->collect_acf_fields_recursively( $sub_field, $new_prefix, $results );
+				}
+			}
+			// Additionally, handle flexible content layouts.
+			if ( 'flexible_content' === $field_type && ! empty( $field['layouts'] ) && is_array( $field['layouts'] ) ) {
+				foreach ( $field['layouts'] as $layout ) {
+					if ( ! empty( $layout['sub_fields'] ) && is_array( $layout['sub_fields'] ) ) {
+						foreach ( $layout['sub_fields'] as $sub_field ) {
+							$this->collect_acf_fields_recursively( $sub_field, $new_prefix, $results );
+						}
+					}
+				}
+			}
+			return;
+		}
+
+		// For normal fields, build the key using the current prefix (if any).
+		$current_key = $prefix ? $prefix . '_' . $field_name : $field_name;
+		// Use the field label if available; otherwise, fallback to the field name.
+		$label = isset( $field['label'] ) && ! empty( $field['label'] ) ? (string) $field['label'] : $field_name;
+		$results[ $current_key ] = $label;
+	}
+
 
 	/**
 	 * Get ACF Field Groups
@@ -706,6 +802,125 @@ class Module extends Base_Module {
 	}
 
 	/**
+	 * Get cryptocurrency coins with search functionality
+	 *
+	 * @param array<mixed> $data
+	 * @return array<int,array<string,int|string>>
+	 */
+	protected function get_cryptocurrency_coins( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
+		$crypto = \DynamicVisibilityForElementor\Plugin::instance()->cryptocurrency;
+
+		// Return empty if no API key (controlled at widget/dynamic tag level)
+		if ( ! $crypto->has_api_key() ) {
+			return [];
+		}
+
+		try {
+			$all_coins = $crypto->get_available_coins();
+		} catch ( \DynamicVisibilityForElementor\CryptocurrencyApiError $e ) {
+			// Return empty if API fails
+			return [];
+		}
+
+		$results = [];
+		$search_term = strtolower( $data['q'] );
+
+		foreach ( $all_coins as $coin ) {
+			$name = $coin['name'] ?? '';
+			$symbol = $coin['symbol'] ?? '';
+			$id = $coin['id'] ?? '';
+
+			// Search in name and symbol
+			if ( stripos( $name, $search_term ) !== false || stripos( $symbol, $search_term ) !== false ) {
+				$results[] = [
+					'id' => $id,
+					'text' => esc_attr( $name . ' (' . $symbol . ')' ),
+				];
+			}
+
+			// Limit results to prevent performance issues
+			if ( count( $results ) >= 50 ) {
+				break;
+			}
+		}
+
+		return $results;
+	}
+
+	/**
+	 * Get cryptocurrency conversion options with search functionality
+	 *
+	 * @param array<mixed> $data
+	 * @return array<int,array<string,int|string>>
+	 */
+	protected function get_cryptocurrency_convert( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
+		$crypto = \DynamicVisibilityForElementor\Plugin::instance()->cryptocurrency;
+
+		// Return empty if no API key (controlled at widget/dynamic tag level)
+		if ( ! $crypto->has_api_key() ) {
+			return [];
+		}
+
+		try {
+			$all_fiat = $crypto->get_fiat();
+			$all_coins = $crypto->get_available_coins();
+		} catch ( \DynamicVisibilityForElementor\CryptocurrencyApiError $e ) {
+			// Return empty if API fails
+			return [];
+		}
+
+		$results = [];
+		$search_term = strtolower( $data['q'] );
+
+		// Search in fiat currencies
+		foreach ( $all_fiat as $fiat ) {
+			$name = $fiat['name'] ?? '';
+			$symbol = $fiat['symbol'] ?? '';
+			$id = $fiat['id'] ?? '';
+
+			if ( stripos( $name, $search_term ) !== false || stripos( $symbol, $search_term ) !== false ) {
+				$results[] = [
+					'id' => $id,
+					'text' => esc_attr( $name . ' (' . $symbol . ')' ),
+				];
+			}
+		}
+
+		// Search in cryptocurrencies
+		foreach ( $all_coins as $coin ) {
+			$name = $coin['name'] ?? '';
+			$symbol = $coin['symbol'] ?? '';
+			$id = $coin['id'] ?? '';
+
+			if ( stripos( $name, $search_term ) !== false || stripos( $symbol, $search_term ) !== false ) {
+				$results[] = [
+					'id' => $id,
+					'text' => esc_attr( $name . ' (' . $symbol . ')' ),
+				];
+			}
+
+			// Limit results to prevent performance issues
+			if ( count( $results ) >= 50 ) {
+				break;
+			}
+		}
+
+		return $results;
+	}
+
+
+
+
+
+	/**
 	 * Calls function to get value titles depending on ajax query type
 	 *
 	 * @param array<string,mixed> $request
@@ -737,6 +952,8 @@ class Module extends Base_Module {
 			'terms_fields',
 			'taxonomies_fields',
 			'search_and_filter_v3_query_ids',
+			'cryptocurrency_coins',
+			'cryptocurrency_convert',
 		];
 
 		$query_type = sanitize_key( $request['query_type'] );
@@ -781,11 +998,16 @@ class Module extends Base_Module {
 	}
 
 	/**
+	 * Retrieves the ACF label for given field keys.
+	 * If acf_get_field() doesn't find a valid field (or label is empty),
+	 * it falls back to returning the original key as the label.
+	 *
 	 * @param array<string,mixed> $request
-	 * @return array<string,mixed>
+	 * @return array<string,string>
+	 * @throws \Exception If user lacks permissions
 	 */
 	protected function get_value_titles_for_acf( $request ) {
-		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+		if ( ! current_user_can( \Elementor\Core\Editor\Editor::EDITING_CAPABILITY ) ) {
 			throw new \Exception( 'Access denied.' );
 		}
 
@@ -797,10 +1019,16 @@ class Module extends Base_Module {
 		$results = [];
 		foreach ( $ids as $field_key ) {
 			$field = acf_get_field( $field_key );
-			if ( $field ) {
+
+			if ( $field && ! empty( $field['label'] ) ) {
+				// Field found, label is set
 				$results[ $field_key ] = $field['label'];
+			} else {
+				// Field not found or label is empty, fallback to the original field key
+				$results[ $field_key ] = $field_key;
 			}
 		}
+
 		return $results;
 	}
 
@@ -1117,6 +1345,78 @@ class Module extends Base_Module {
 				}
 			}
 		}
+		return $results;
+	}
+
+	/**
+	 * Get cryptocurrency coins titles by IDs
+	 *
+	 * @param array<string,mixed> $request
+	 * @return array<string,mixed>
+	 */
+	protected function get_value_titles_for_cryptocurrency_coins( $request ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
+		$ids = (array) $request['id'];
+		$crypto = \DynamicVisibilityForElementor\Plugin::instance()->cryptocurrency;
+
+		// Return empty if no API key (controlled at widget/dynamic tag level)
+		if ( ! $crypto->has_api_key() ) {
+			return [];
+		}
+
+		$results = [];
+
+		foreach ( $ids as $id ) {
+			try {
+				$coin_info = $crypto->get_crypto_info( $id );
+				if ( $coin_info ) {
+					$results[ $id ] = esc_attr( $coin_info['name'] . ' (' . $coin_info['symbol'] . ')' );
+				}
+			} catch ( \DynamicVisibilityForElementor\CryptocurrencyApiError $e ) {
+				// Skip if API fails - no fallback
+				continue;
+			}
+		}
+
+		return $results;
+	}
+
+	/**
+	 * Get cryptocurrency conversion titles by IDs
+	 *
+	 * @param array<string,mixed> $request
+	 * @return array<string,mixed>
+	 */
+	protected function get_value_titles_for_cryptocurrency_convert( $request ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
+		$ids = (array) $request['id'];
+		$crypto = \DynamicVisibilityForElementor\Plugin::instance()->cryptocurrency;
+
+		// Return empty if no API key (controlled at widget/dynamic tag level)
+		if ( ! $crypto->has_api_key() ) {
+			return [];
+		}
+
+		$results = [];
+
+		foreach ( $ids as $id ) {
+			try {
+				$currency_info = $crypto->get_fiat_and_crypto_info( $id );
+				if ( is_array( $currency_info ) && isset( $currency_info['name'], $currency_info['symbol'] ) ) {
+					$results[ $id ] = esc_attr( $currency_info['name'] . ' (' . $currency_info['symbol'] . ')' );
+				}
+			} catch ( \DynamicVisibilityForElementor\CryptocurrencyApiError $e ) {
+				// Skip if API fails - no fallback
+				continue;
+			}
+		}
+
 		return $results;
 	}
 

@@ -1,4 +1,7 @@
 <?php
+
+// SPDX-FileCopyrightText: 2018-2026 Ovation S.r.l. <help@dynamic.ooo>
+// SPDX-License-Identifier: GPL-3.0-or-later
 namespace DynamicVisibilityForElementor;
 
 trait Strings {
@@ -38,17 +41,24 @@ trait Strings {
 		return $pieces;
 	}
 
-	public static function to_string( $avalue, $listed = false ) {
+	/**
+	 * Convert a value to a readable string
+	 *
+	 * @param mixed $avalue
+	 * @param boolean $listed
+	 * @return string
+	 */
+	public static function to_readable_string( $avalue, $listed = false ) {
 		if ( ! is_array( $avalue ) && ! is_object( $avalue ) ) {
-			return $avalue;
+			return (string) $avalue;
 		}
-		if ( is_object( $avalue ) && get_class( $avalue ) == 'WP_Term' ) {
+		if ( $avalue instanceof \WP_Term ) {
 			return esc_html( $avalue->name );
 		}
-		if ( is_object( $avalue ) && get_class( $avalue ) == 'WP_Post' ) {
+		if ( $avalue instanceof \WP_Post ) {
 			return esc_html( $avalue->post_title );
 		}
-		if ( is_object( $avalue ) && get_class( $avalue ) == 'WP_User' ) {
+		if ( $avalue instanceof \WP_User ) {
 			return esc_html( $avalue->display_name );
 		}
 
@@ -67,7 +77,7 @@ trait Strings {
 		}
 		if ( count( $avalue ) == 1 ) {
 			$first = reset( $avalue );
-			return self::to_string( $first );
+			return self::to_readable_string( $first );
 		}
 		return self::implode_recursive( ', ', $avalue, $listed );
 	}
@@ -76,10 +86,10 @@ trait Strings {
 		$tmp = $content;
 		$tags = array( '[/vc_', '[vc_', '[dt_', '[interactive_banner_2' );
 		foreach ( $tags as $atag ) {
-			$pezzi = explode( $atag, $tmp );
-			if ( count( $pezzi ) > 1 ) {
+			$parts = explode( $atag, $tmp );
+			if ( count( $parts ) > 1 ) {
 				$content_mod = '';
-				foreach ( $pezzi as $key => $value ) {
+				foreach ( $parts as $key => $value ) {
 					$altro = explode( ']', $value, 2 );
 					$content_mod .= end( $altro );
 				}
@@ -206,7 +216,7 @@ trait Strings {
 					$output .= '<li>';
 				}
 				if ( is_object( $av ) ) {
-					$av = self::to_string( $av );
+					$av = self::to_readable_string( $av );
 				}
 				if ( is_array( $av ) ) {
 					$output .= self::implode_recursive( $separator, $av, $listed ); // Recursive Use of the Array

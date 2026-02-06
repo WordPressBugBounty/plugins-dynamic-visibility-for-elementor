@@ -1,4 +1,7 @@
 <?php
+
+// SPDX-FileCopyrightText: 2018-2026 Ovation S.r.l. <help@dynamic.ooo>
+// SPDX-License-Identifier: GPL-3.0-or-later
 namespace DynamicVisibilityForElementor;
 
 trait Wp {
@@ -71,7 +74,7 @@ trait Wp {
 			$post_types = array_diff( $post_types, $skip_post_types );
 		}
 
-		if ( Helper::is_woocommerce_active() ) {
+		if ( Helper::is_plugin_active( 'woocommerce' ) ) {
 			$post_types['product_variation'] = 'product_variation';
 		}
 
@@ -253,51 +256,6 @@ trait Wp {
 			}
 		}
 		return $listTerm;
-	}
-
-	// ************************************** ALL POST SINGLE IN ALL REGISTER TYPE ***************************/
-	public static function get_all_posts( $myself = null, $group = false, $orderBy = 'title' ) {
-		$args = array(
-			'public' => true,
-		);
-
-		$output = 'names'; // names or objects, note names is the default
-		$operator = 'and'; // 'and' or 'or'
-		$posttype_all = get_post_types( $args, $output, $operator );
-
-		$type_excluded = array( 'elementor_library', 'oceanwp_library', 'ae_global_templates' );
-		$typesRegistered = array_diff( $posttype_all, $type_excluded );
-		// Return elementor templates array
-
-		$templates[0] = 'None';
-
-		$exclude_io = array();
-		if ( isset( $myself ) && $myself ) {
-			$exclude_io = array( $myself );
-		}
-
-		$get_templates = get_posts(array(
-			'post_type' => $typesRegistered,
-			'numberposts' => -1,
-			'post__not_in' => $exclude_io,
-			'post_status' => 'publish',
-			'orderby' => $orderBy,
-			'order' => 'DESC',
-		));
-
-		if ( ! empty( $get_templates ) ) {
-			foreach ( $get_templates as $template ) {
-
-				if ( $group ) {
-					$templates[ $template->post_type ]['options'][ $template->ID ] = esc_html( $template->post_title );
-					$templates[ $template->post_type ]['label'] = $template->post_type;
-				} else {
-					$templates[ $template->ID ] = esc_html( $template->post_title );
-				}
-			}
-		}
-
-		return $templates;
 	}
 
 	/**
@@ -645,7 +603,7 @@ trait Wp {
 					'user_url',
 					'roles',
 				];
-				// -!h- prevent access to fields like user_pass:
+				
 				if ( in_array( $field, $user_properties_whitelist ) ) {
 					// campo nativo
 					if ( property_exists( $userTmp->data, $field ) ) {
@@ -769,7 +727,7 @@ trait Wp {
 				$elementor_styles['theme-templatepath'] = get_template_directory() . '/assets/css/style.css';
 			}
 		}
-		if ( self::is_elementorpro_active() ) {
+		if ( self::is_plugin_active( 'elementor-pro' ) ) {
 			$elementor_styles['elementor-pro-css'] = ELEMENTOR_PRO_ASSETS_PATH . 'css/frontend.min.css';
 		}
 		if ( $post_id ) {

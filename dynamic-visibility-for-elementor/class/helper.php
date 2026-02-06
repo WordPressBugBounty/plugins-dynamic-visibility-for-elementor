@@ -1,4 +1,7 @@
 <?php
+
+// SPDX-FileCopyrightText: 2018-2026 Ovation S.r.l. <help@dynamic.ooo>
+// SPDX-License-Identifier: GPL-3.0-or-later
 #phpcs:ignoreFile
 namespace DynamicVisibilityForElementor;
 use Elementor\Icons_Manager;
@@ -157,18 +160,12 @@ class Helper {
 	 * @param mixed $value
 	 * @return boolean
 	 */
-	public static function is_condition_satisfied( $field, string $status, $value ) {
+	public static function is_condition_satisfied( $field, $status, $value ) {
 		switch ( $status ) {
 			case 'isset':
-				if ( ! empty( $field ) ) {
-					return true;
-				}
-				break;
+				return ! empty( $field );
 			case 'not':
-				if ( empty( $field ) ) {
-					return true;
-				}
-				break;
+				return empty( $field );
 			case 'lt':
 				if ( is_numeric( $field ) ) {
 					$field = floatval( $field );
@@ -180,6 +177,17 @@ class Helper {
 					return true;
 				}
 				return $field < $value;
+			case 'lte':
+				if ( is_numeric( $field ) ) {
+					$field = floatval( $field );
+				}
+				if ( is_numeric( $value ) ) {
+					$value = floatval( $value );
+				}
+				if ( is_array( $field ) && count( $field ) <= $value ) {
+					return true;
+				}
+				return $field <= $value;
 			case 'gt':
 				if ( is_numeric( $field ) ) {
 					$field = floatval( $field );
@@ -191,6 +199,17 @@ class Helper {
 					return true;
 				}
 				return $field > $value;
+			case 'gte':
+				if ( is_numeric( $field ) ) {
+					$field = floatval( $field );
+				}
+				if ( is_numeric( $value ) ) {
+					$value = floatval( $value );
+				}
+				if ( is_array( $field ) && count( $field ) >= $value ) {
+					return true;
+				}
+				return $field >= $value;
 			case 'contain':
 				if ( is_array( $field ) && in_array( $value, $field ) ) {
 					return true;
@@ -198,7 +217,7 @@ class Helper {
 				if ( is_string( $field ) && $value !== '' && strpos( $field, $value ) !== false ) {
 					return true;
 				}
-				break;
+				return false;
 			case 'not_contain':
 				if ( empty( $field ) ) {
 					return true;
@@ -209,21 +228,123 @@ class Helper {
 				if ( is_string( $field ) && $value !== '' && strpos( $field, $value ) === false ) {
 					return true;
 				}
-				break;
+				return false;
+			case 'starts_with':
+				$field = Helper::to_readable_string( $field );
+				$value = Helper::to_readable_string( $value );
+				if ( $value === '' ) {
+					return true;
+				}
+				return strpos( $field, $value ) === 0;
+			case 'ends_with':
+				$field = Helper::to_readable_string( $field );
+				$value = Helper::to_readable_string( $value );
+				if ( $value === '' ) {
+					return true;
+				}
+				return substr( $field, -strlen( $value ) ) === $value;
 			case 'in_array':
 				if ( ! is_array( $value ) ) {
-					$value = Helper::to_string( $value );
+					$value = Helper::to_readable_string( $value );
 					$value = Helper::str_to_array( ',', $value );
 				}
 				if ( in_array( $field, $value ) ) {
 					return true;
 				}
-				break;
+				return false;
+			case 'not_in_array':
+				if ( ! is_array( $value ) ) {
+					$value = Helper::to_readable_string( $value );
+					$value = Helper::str_to_array( ',', $value );
+				}
+				return ! in_array( $field, $value );
 			case 'not_value':
 				return $field != $value;
 			case 'value':
 				return $field == $value;
+			case 'not_value_i':
+				return strcasecmp( Helper::to_readable_string( $field ), Helper::to_readable_string( $value ) ) !== 0;
+			case 'value_i':
+				return strcasecmp( Helper::to_readable_string( $field ), Helper::to_readable_string( $value ) ) === 0;
 		}
 		return false;
+	}
+
+	/**
+	 * Map form condition status to is_condition_satisfied keys
+	 *
+	 * Form extensions use different keys (valued, empty, equal) than
+	 * is_condition_satisfied (isset, not, value). This function maps
+	 * form-specific keys and optionally applies inversion.
+	 *
+	 * @param string $status The form condition status
+	 * @param bool $invert Whether to invert the condition
+	 * @return string The mapped status for is_condition_satisfied
+	 */
+	public static function map_form_condition_status( $status, $invert = false ) {
+		$map = [
+			'valued' => 'isset',
+			'empty' => 'not',
+			'equal' => 'value',
+		];
+
+		$mapped = $map[ $status ] ?? $status;
+
+		if ( $invert ) {
+			$invert_map = [
+				'isset' => 'not',
+				'not' => 'isset',
+				'value' => 'not_value',
+				'not_value' => 'value',
+				'lt' => 'gte',
+				'gte' => 'lt',
+				'gt' => 'lte',
+				'lte' => 'gt',
+				'contain' => 'not_contain',
+				'not_contain' => 'contain',
+			];
+			$mapped = $invert_map[ $mapped ] ?? $mapped;
+		}
+
+		return $mapped;
+	}
+
+	/**
+	 * Get Client IP Address
+	 *
+	 * Determines the real IP address of the client, accounting for proxies,
+	 * load balancers, CDNs, and other network configurations.
+	 *
+	 * SPDX-FileCopyrightText: 2016-2025 Elementor Team <developers@elementor.com>
+	 * SPDX-License-Identifier: GPL-3.0-or-later
+	 * 
+	 * This function is based on ElementorPro\Core\Utils::get_client_ip()
+	 * from Elementor Pro v3.29.0 and adapted for use in Dynamic Content 
+	 * for Elementor on 2025-07-11 to avoid dependency.
+	 *
+	 * @return string The client's IP address
+	 */
+	public static function get_client_ip() {
+		$server_ip_keys = [
+			'HTTP_CLIENT_IP',
+			'HTTP_X_FORWARDED_FOR',
+			'HTTP_X_FORWARDED',
+			'HTTP_X_CLUSTER_CLIENT_IP',
+			'HTTP_FORWARDED_FOR',
+			'HTTP_FORWARDED',
+			'REMOTE_ADDR',
+		];
+
+		foreach ( $server_ip_keys as $key ) {
+			if ( ! empty( $_SERVER[ $key ] ) ) {
+				$value = sanitize_text_field( wp_unslash( $_SERVER[ $key ] ) );
+				if ( filter_var( $value, FILTER_VALIDATE_IP ) ) {
+					return $value;
+				}
+			}
+		}
+
+		// Fallback local ip.
+		return '127.0.0.1';
 	}
 }

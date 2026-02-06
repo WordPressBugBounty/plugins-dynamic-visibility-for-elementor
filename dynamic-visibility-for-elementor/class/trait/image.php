@@ -1,17 +1,20 @@
 <?php
+
+// SPDX-FileCopyrightText: 2018-2026 Ovation S.r.l. <help@dynamic.ooo>
+// SPDX-License-Identifier: GPL-3.0-or-later
 namespace DynamicVisibilityForElementor;
 
 trait Image {
 
 	public static function is_resized_image( $imagePath ) {
 		$ext = pathinfo( $imagePath, PATHINFO_EXTENSION );
-		$pezzi = explode( '-', substr( $imagePath, 0, -( strlen( $ext ) + 1 ) ) );
-		if ( count( $pezzi ) > 1 ) {
-			$misures = array_pop( $pezzi );
-			$fullsize = implode( '-', $pezzi ) . '.' . $ext;
-			$pezzi = explode( 'x', $misures );
-			if ( count( $pezzi ) == 2 ) {
-				if ( is_numeric( $pezzi[0] ) && is_numeric( $pezzi[1] ) ) {
+		$parts = explode( '-', substr( $imagePath, 0, -( strlen( $ext ) + 1 ) ) );
+		if ( count( $parts ) > 1 ) {
+			$misures = array_pop( $parts );
+			$fullsize = implode( '-', $parts ) . '.' . $ext;
+			$parts = explode( 'x', $misures );
+			if ( count( $parts ) == 2 ) {
+				if ( is_numeric( $parts[0] ) && is_numeric( $parts[1] ) ) {
 					return $fullsize; // return original value
 				}
 			}

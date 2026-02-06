@@ -4,18 +4,33 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInitfe790510a9f6dd24ddea822939326087
+class ComposerStaticInit05f3b71292cb49aa8af96c251f410e29
 {
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'DynamicVisibilityForElementor\\AdminPages\\Notices' => __DIR__ . '/../..' . '/includes/admin-pages/notices.php',
-        'DynamicVisibilityForElementor\\Ajax' => __DIR__ . '/../..' . '/class/ajax.php',
         'DynamicVisibilityForElementor\\Controls' => __DIR__ . '/../..' . '/class/controls.php',
         'DynamicVisibilityForElementor\\Controls\\Control_OOO_Query' => __DIR__ . '/../..' . '/includes/controls/ooo-query.php',
         'DynamicVisibilityForElementor\\Date' => __DIR__ . '/../..' . '/class/trait/date.php',
         'DynamicVisibilityForElementor\\Elementor' => __DIR__ . '/../..' . '/class/trait/elementor.php',
-        'DynamicVisibilityForElementor\\Elements' => __DIR__ . '/../..' . '/class/elements.php',
-        'DynamicVisibilityForElementor\\Extensions\\DynamicVisibility' => __DIR__ . '/../..' . '/includes/extensions/dynamic-visibility.php',
+        'DynamicVisibilityForElementor\\Extensions\\DynamicVisibility\\Elements' => __DIR__ . '/../..' . '/includes/extensions/dynamic-visibility/elements.php',
+        'DynamicVisibilityForElementor\\Extensions\\DynamicVisibility\\Manager' => __DIR__ . '/../..' . '/includes/extensions/dynamic-visibility/manager.php',
+        'DynamicVisibilityForElementor\\Extensions\\DynamicVisibility\\Sections' => __DIR__ . '/../..' . '/includes/extensions/dynamic-visibility/sections.php',
+        'DynamicVisibilityForElementor\\Extensions\\DynamicVisibility\\Triggers\\Archive' => __DIR__ . '/../..' . '/includes/extensions/dynamic-visibility/triggers/archive.php',
+        'DynamicVisibilityForElementor\\Extensions\\DynamicVisibility\\Triggers\\Base' => __DIR__ . '/../..' . '/includes/extensions/dynamic-visibility/triggers/base.php',
+        'DynamicVisibilityForElementor\\Extensions\\DynamicVisibility\\Triggers\\Context' => __DIR__ . '/../..' . '/includes/extensions/dynamic-visibility/triggers/context.php',
+        'DynamicVisibilityForElementor\\Extensions\\DynamicVisibility\\Triggers\\Custom' => __DIR__ . '/../..' . '/includes/extensions/dynamic-visibility/triggers/custom.php',
+        'DynamicVisibilityForElementor\\Extensions\\DynamicVisibility\\Triggers\\DateTime' => __DIR__ . '/../..' . '/includes/extensions/dynamic-visibility/triggers/datetime.php',
+        'DynamicVisibilityForElementor\\Extensions\\DynamicVisibility\\Triggers\\Device' => __DIR__ . '/../..' . '/includes/extensions/dynamic-visibility/triggers/device.php',
+        'DynamicVisibilityForElementor\\Extensions\\DynamicVisibility\\Triggers\\DynamicTag' => __DIR__ . '/../..' . '/includes/extensions/dynamic-visibility/triggers/dynamic-tag.php',
+        'DynamicVisibilityForElementor\\Extensions\\DynamicVisibility\\Triggers\\Events' => __DIR__ . '/../..' . '/includes/extensions/dynamic-visibility/triggers/events.php',
+        'DynamicVisibilityForElementor\\Extensions\\DynamicVisibility\\Triggers\\Geotargeting' => __DIR__ . '/../..' . '/includes/extensions/dynamic-visibility/triggers/geotargeting.php',
+        'DynamicVisibilityForElementor\\Extensions\\DynamicVisibility\\Triggers\\Manager' => __DIR__ . '/../..' . '/includes/extensions/dynamic-visibility/triggers/manager.php',
+        'DynamicVisibilityForElementor\\Extensions\\DynamicVisibility\\Triggers\\MyFastApp' => __DIR__ . '/../..' . '/includes/extensions/dynamic-visibility/triggers/my-fast-app.php',
+        'DynamicVisibilityForElementor\\Extensions\\DynamicVisibility\\Triggers\\Post' => __DIR__ . '/../..' . '/includes/extensions/dynamic-visibility/triggers/post.php',
+        'DynamicVisibilityForElementor\\Extensions\\DynamicVisibility\\Triggers\\Random' => __DIR__ . '/../..' . '/includes/extensions/dynamic-visibility/triggers/random.php',
+        'DynamicVisibilityForElementor\\Extensions\\DynamicVisibility\\Triggers\\User' => __DIR__ . '/../..' . '/includes/extensions/dynamic-visibility/triggers/user.php',
+        'DynamicVisibilityForElementor\\Extensions\\DynamicVisibility\\Triggers\\WooCommerce' => __DIR__ . '/../..' . '/includes/extensions/dynamic-visibility/triggers/woocommerce.php',
         'DynamicVisibilityForElementor\\Extensions\\ExtensionPrototype' => __DIR__ . '/../..' . '/includes/extensions/extension-prototype.php',
         'DynamicVisibilityForElementor\\Filesystem' => __DIR__ . '/../..' . '/class/trait/filesystem.php',
         'DynamicVisibilityForElementor\\Form' => __DIR__ . '/../..' . '/class/trait/form.php',
@@ -39,7 +54,7 @@ class ComposerStaticInitfe790510a9f6dd24ddea822939326087
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->classMap = ComposerStaticInitfe790510a9f6dd24ddea822939326087::$classMap;
+            $loader->classMap = ComposerStaticInit05f3b71292cb49aa8af96c251f410e29::$classMap;
 
         }, null, ClassLoader::class);
     }

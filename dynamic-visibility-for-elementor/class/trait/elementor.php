@@ -1,9 +1,13 @@
 <?php
+
+// SPDX-FileCopyrightText: 2018-2026 Ovation S.r.l. <help@dynamic.ooo>
+// SPDX-License-Identifier: GPL-3.0-or-later
 namespace DynamicVisibilityForElementor;
 
 use ElementorPro\Modules\Forms\Module as Forms_Module;
 
 trait Elementor {
+
 	/**
 	 * Get Current Post ID
 	 *
@@ -22,8 +26,8 @@ trait Elementor {
 	 * Fetch $element_id inside $post_id. Side effect: It also switches post
 	 * to $queried_id for the element dynamic settings.
 	 *
-	 * @copyright Elementor
-	 * @license GPLv3
+	 * SPDX-FileCopyrightText: Elementor
+	 * SPDX-License-Identifier: GPL-3.0-or-later
 	 */
 	public static function get_elementor_element_from_post_data( $post_id, $element_id, $queried_id ) {
 		$elementor = \Elementor\Plugin::$instance;
@@ -100,10 +104,10 @@ trait Elementor {
 		if ( ! $post_id ) {
 			$post_id = get_the_ID();
 			if ( ! $post_id && isset( $_GET['post'] ) ) {
-				$post_id = intval( $_GET['post'] );
+				$post_id = absint( $_GET['post'] );
 			}
 			if ( ! $post_id && isset( $_POST['post_id'] ) ) {
-				$post_id = intval( $_POST['post_id'] );
+				$post_id = absint( $_POST['post_id'] );
 			}
 		}
 
@@ -173,10 +177,10 @@ trait Elementor {
 			if ( ! $post_id ) {
 				$post_id = get_the_ID();
 				if ( ! $post_id && isset( $_GET['post'] ) ) {
-					$post_id = intval( $_GET['post'] );
+					$post_id = absint( $_GET['post'] );
 				}
 				if ( ! $post_id && isset( $_POST['post_id'] ) ) {
-					$post_id = intval( $_POST['post_id'] );
+					$post_id = absint( $_POST['post_id'] );
 				}
 			}
 		}
@@ -195,27 +199,11 @@ trait Elementor {
 		return false;
 	}
 
-	public static function get_elementor_element_current() {
-		$element = Elements::$elementor_current;
-		if ( $element ) {
-			return $element;
-		}
-		return false;
-	}
-
 	public static function get_elementor_element_settings_by_id( $element_id = null, $post_id = null ) {
 		$element = self::get_elementor_element_by_id( $element_id, $post_id );
 		if ( $element ) {
 			$settings = $element->get_settings_for_display();
 			return $settings;
-		}
-		return false;
-	}
-
-	public static function get_settings_by_id( $element_id = null, $post_id = null ) {
-		$element = self::get_element_by_id( $element_id, $post_id );
-		if ( $element && ! empty( $element['settings'] ) ) {
-			return $element['settings'];
 		}
 		return false;
 	}
@@ -229,31 +217,6 @@ trait Elementor {
 			}
 		}
 		return false;
-	}
-
-	public static function set_settings_by_id( $element_id, $key, $value = null, $post_id = null ) {
-		if ( ! $post_id ) {
-			$post_id = get_the_ID();
-			if ( ! $post_id && isset( $_GET['post'] ) ) {
-				$post_id = intval( $_GET['post'] );
-			}
-		}
-
-		$post_meta = self::get_elementor_data( $post_id );
-		$keys_array = self::array_find_deep( $post_meta, $element_id );
-		if ( ! empty( $keys_array ) ) {
-			$tmp_key = array_search( 'id', $keys_array );
-			if ( $tmp_key !== false ) {
-				array_pop( $keys_array );
-				$keys_array[] = 'settings';
-			}
-			$keys_array[] = $key;
-			$post_meta = Helper::set_array_value_by_keys( is_array( $post_meta ) ? $post_meta : [], $keys_array, $value );
-
-			$post_meta_prepared = wp_json_encode( $post_meta );
-			update_metadata( 'post', $post_id, '_elementor_data', $post_meta_prepared );
-		}
-		return $post_id;
 	}
 
 	public static function recursive_array_search( $needle, $haystack, $currentKey = '' ) {
@@ -372,7 +335,7 @@ trait Elementor {
 
 	public static function get_theme_builder_template_id( $location = false ) {
 		$template_id = 0;
-		if ( Helper::is_elementorpro_active() ) {
+		if ( Helper::is_plugin_active( 'elementor-pro' ) ) {
 			// check with Elementor Pro Theme Builder
 			if ( ! $location ) {
 				if ( is_singular() ) {
@@ -390,21 +353,7 @@ trait Elementor {
 		return $template_id;
 	}
 
-	public static function user_can_elementor() {
-		if ( is_user_logged_in() ) {
-			if ( is_super_admin() ) {
-				return true;
-			}
-			if ( is_singular() ) {
-				if ( \Elementor\User::is_current_user_can_edit_post_type( get_post_type() ) ) {
-					return true;
-				}
-			} else {
-				return \Elementor\User::is_current_user_can_edit_post_type( 'elementor_library' );
-			}
-		}
-		return false;
-	}
+
 
 	public static function get_icon( $icon, $attributes = [], $tag = 'i' ) {
 		ob_start();
