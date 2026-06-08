@@ -145,13 +145,11 @@ class Archive extends Base {
 	 * @param array<string,mixed> $settings
 	 * @param array<string,mixed> &$triggers
 	 * @param array<string,mixed> &$conditions
-	 * @param int &$triggers_n
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	public function check_conditions( $settings, &$triggers, &$conditions, &$triggers_n, $element ) {
+	public function check_conditions( $settings, &$triggers, &$conditions, $element ) {
 		if ( ! empty( $settings['dce_visibility_archive'] ) ) {
-
 			$context_archive = false;
 			$archive = $settings['dce_visibility_archive'];
 
@@ -213,7 +211,6 @@ class Archive extends Base {
 					$context_archive_advanced = true;
 				}
 
-				++$triggers_n;
 				if ( $context_archive_advanced ) {
 					$conditions['dce_visibility_archive'] = esc_html__( 'Archive', 'dynamic-visibility-for-elementor' );
 				}
@@ -228,7 +225,6 @@ class Archive extends Base {
 			if ( ! empty( $settings['dce_visibility_term_root'] ) ) {
 				$triggers['dce_visibility_term_root'] = esc_html__( 'Term is Root', 'dynamic-visibility-for-elementor' );
 
-				++$triggers_n;
 				if ( ! $term->parent ) {
 					$conditions['dce_visibility_term_root'] = esc_html__( 'Term is Root', 'dynamic-visibility-for-elementor' );
 				}
@@ -238,7 +234,6 @@ class Archive extends Base {
 				$triggers['dce_visibility_term_parent'] = esc_html__( 'Term is Parent', 'dynamic-visibility-for-elementor' );
 
 				$children = get_term_children( $term->term_id, $term->taxonomy );
-				++$triggers_n;
 				if ( ! empty( $children ) && is_array( $children ) ) {
 					$conditions['dce_visibility_term_parent'] = esc_html__( 'Term is Parent', 'dynamic-visibility-for-elementor' );
 				}
@@ -248,7 +243,6 @@ class Archive extends Base {
 				$triggers['dce_visibility_term_leaf'] = esc_html__( 'Term is Leaf', 'dynamic-visibility-for-elementor' );
 
 				$children = get_term_children( $term->term_id, $term->taxonomy );
-				++$triggers_n;
 				if ( empty( $children ) ) {
 					$conditions['dce_visibility_term_leaf'] = esc_html__( 'Term is Leaf', 'dynamic-visibility-for-elementor' );
 				}
@@ -259,7 +253,6 @@ class Archive extends Base {
 
 				if ( $term->parent ) {
 					$children = get_term_children( $term->term_id, $term->taxonomy );
-					++$triggers_n;
 					if ( ! empty( $children ) ) {
 						$conditions['dce_visibility_term_node'] = esc_html__( 'Term is Node', 'dynamic-visibility-for-elementor' );
 					}
@@ -269,7 +262,6 @@ class Archive extends Base {
 			if ( ! empty( $settings['dce_visibility_term_child'] ) ) {
 				$triggers['dce_visibility_term_child'] = esc_html__( 'Term has Parent', 'dynamic-visibility-for-elementor' );
 
-				++$triggers_n;
 				if ( $term->parent ) {
 					$conditions['dce_visibility_term_child'] = esc_html__( 'Term has Parent', 'dynamic-visibility-for-elementor' );
 				}
@@ -289,7 +281,6 @@ class Archive extends Base {
 					];
 					$siblings = get_terms( $args );
 				}
-				++$triggers_n;
 				if ( ! empty( $siblings ) && is_array( $siblings ) && count( $siblings ) > 1 ) {
 					$conditions['dce_visibility_term_sibling'] = esc_html__( 'Term has Siblings', 'dynamic-visibility-for-elementor' );
 				}
@@ -298,7 +289,6 @@ class Archive extends Base {
 			if ( ! empty( $settings['dce_visibility_term_count'] ) ) {
 				$triggers['dce_visibility_term_count'] = esc_html__( 'Term Posts', 'dynamic-visibility-for-elementor' );
 
-				++$triggers_n;
 				if ( $term->count ) {
 					$conditions['dce_visibility_term_count'] = esc_html__( 'Term Posts', 'dynamic-visibility-for-elementor' );
 				}

@@ -51,15 +51,19 @@ trait Form {
 		}
 
 		if ( ! empty( $fields['submitted_on_id'] ) ) {
+			$submitted_on_id = absint( $fields['submitted_on_id'] );
 			global $post, $user;
-			if ( empty( $post ) ) {
-				$post = get_post( $fields['submitted_on_id'] );
+			if ( empty( $post ) && $submitted_on_id && Helper::can_current_user_view_post( $submitted_on_id ) ) {
+				$post = get_post( $submitted_on_id );
 			}
 		}
 
 		if ( ! empty( $fields['post_id'] ) ) {
-			global $post;
-			$post = get_post( $fields['post_id'] );
+			$form_post_id = absint( $fields['post_id'] );
+			if ( $form_post_id && Helper::can_current_user_view_post( $form_post_id ) ) {
+				global $post;
+				$post = get_post( $form_post_id );
+			}
 		}
 
 		return $fields;
@@ -103,6 +107,12 @@ trait Form {
 	}
 
 	public static function replace_setting_shortcodes( $setting, $fields = array(), $urlencode = false ) {
+		// Track [form:...] token usage for detector (before replacement)
+		// These tokens don't pass through do_tokens(), so track them here
+		if ( is_string( $setting ) && ! empty( $setting ) && strpos( $setting, '[form:' ) !== false ) {
+			Tokens::track_token_usage( $setting );
+		}
+
 		// Shortcode can be `[field id="fds21fd"]` or `[field title="Email" id="fds21fd"]`, multiple shortcodes are allowed
 		$setting = preg_replace_callback('/(\[field[^]]*id="(\w+)"[^]]*\])/', function ( $matches ) use ( $urlencode, $fields ) {
 			$value = '';

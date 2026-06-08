@@ -44,9 +44,11 @@ class Helper {
 		'header',
 		'main',
 		'nav',
+		'ol',
 		'p',
 		'section',
 		'span',
+		'ul',
 		'code',
 	];
 
@@ -68,8 +70,29 @@ class Helper {
 		'status',
 	];
 
+	/**
+	 * @return bool
+	 */
+	public static function current_user_is_admin() {
+		if ( is_multisite() ) {
+			return is_super_admin();
+		}
+		return current_user_can( 'manage_options' );
+	}
+
+	/**
+	 * @param int $post_id
+	 * @return bool
+	 */
+	public static function can_current_user_view_post( $post_id ) {
+		if ( current_user_can( 'read_post', $post_id ) || is_post_publicly_viewable( $post_id ) ) {
+			return true;
+		}
+		return 'elementor_library' === get_post_type( $post_id ) && 'publish' === get_post_status( $post_id );
+	}
+
 	public static function can_register_unsafe_controls() {
-		if ( current_user_can( 'administrator' ) ) {
+		if ( self::current_user_is_admin() ) {
 			return true;
 		}
 		if ( \Elementor\Plugin::$instance->editor->is_edit_mode() ) {
@@ -325,23 +348,39 @@ class Helper {
 	 * @return string The client's IP address
 	 */
 	public static function get_client_ip() {
-		$server_ip_keys = [
-			'HTTP_CLIENT_IP',
-			'HTTP_X_FORWARDED_FOR',
-			'HTTP_X_FORWARDED',
-			'HTTP_X_CLUSTER_CLIENT_IP',
-			'HTTP_FORWARDED_FOR',
-			'HTTP_FORWARDED',
-			'REMOTE_ADDR',
-		];
+		$remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
 
-		foreach ( $server_ip_keys as $key ) {
-			if ( ! empty( $_SERVER[ $key ] ) ) {
-				$value = sanitize_text_field( wp_unslash( $_SERVER[ $key ] ) );
-				if ( filter_var( $value, FILTER_VALIDATE_IP ) ) {
-					return $value;
+		/**
+		 * Trusted reverse-proxy IPs. Forwarded headers (X-Forwarded-For, etc.) are
+		 * read only when the request comes from one of these proxies; empty by default.
+		 * Behind a CDN/proxy, add your edge IPs:
+		 *   add_filter( 'dce/visibility/trusted_proxies', fn() => [ '10.0.0.1' ] );
+		 *
+		 * @param string[] $trusted_proxies
+		 */
+		$trusted_proxies = (array) apply_filters( 'dce/visibility/trusted_proxies', [] );
+
+		if ( $trusted_proxies && in_array( $remote_addr, $trusted_proxies, true ) ) {
+			if ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+				$chain = array_map( 'trim', explode( ',', sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) ) );
+				for ( $i = count( $chain ) - 1; $i >= 0; $i-- ) {
+					if ( filter_var( $chain[ $i ], FILTER_VALIDATE_IP ) && ! in_array( $chain[ $i ], $trusted_proxies, true ) ) {
+						return $chain[ $i ];
+					}
 				}
 			}
+			foreach ( [ 'HTTP_CLIENT_IP', 'HTTP_X_CLUSTER_CLIENT_IP', 'HTTP_X_FORWARDED', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED' ] as $key ) {
+				if ( ! empty( $_SERVER[ $key ] ) ) {
+					$value = sanitize_text_field( wp_unslash( $_SERVER[ $key ] ) );
+					if ( filter_var( $value, FILTER_VALIDATE_IP ) ) {
+						return $value;
+					}
+				}
+			}
+		}
+
+		if ( filter_var( $remote_addr, FILTER_VALIDATE_IP ) ) {
+			return $remote_addr;
 		}
 
 		// Fallback local ip.

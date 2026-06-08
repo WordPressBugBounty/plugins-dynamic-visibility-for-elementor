@@ -42,7 +42,75 @@ class Module extends Base_Module {
 			throw new \Exception( 'Bad Request' );
 		}
 
-		$results = call_user_func( [ $this, 'get_' . $data['query_type'] ], $data );
+		$query_type = sanitize_key( $data['query_type'] );
+
+		switch ( $query_type ) {
+			case 'acf':
+				$results = $this->get_acf( $data );
+				break;
+			case 'acfposts':
+				$results = $this->get_acfposts( $data );
+				break;
+			case 'acf_groups':
+				$results = $this->get_acf_groups( $data );
+				break;
+			case 'acf_flexible_content_layouts':
+				$results = $this->get_acf_flexible_content_layouts( $data );
+				break;
+			case 'capabilities':
+				$results = $this->get_capabilities( $data );
+				break;
+			case 'cryptocurrency_coins':
+				$results = $this->get_cryptocurrency_coins( $data );
+				break;
+			case 'cryptocurrency_convert':
+				$results = $this->get_cryptocurrency_convert( $data );
+				break;
+			case 'dsh_fields':
+				$results = $this->get_dsh_fields( $data );
+				break;
+			case 'fields':
+				$results = $this->get_fields( $data );
+				break;
+			case 'jet':
+				$results = $this->get_jet( $data );
+				break;
+			case 'metas':
+				$results = $this->get_metas( $data );
+				break;
+			case 'metabox':
+				$results = $this->get_metabox( $data );
+				break;
+			case 'metabox_relationship':
+				$results = $this->get_metabox_relationship( $data );
+				break;
+			case 'options':
+				$results = $this->get_options( $data );
+				break;
+			case 'pods':
+				$results = $this->get_pods( $data );
+				break;
+			case 'posts':
+				$results = $this->get_posts( $data );
+				break;
+			case 'search_and_filter_v3_query_ids':
+				$results = $this->get_search_and_filter_v3_query_ids( $data );
+				break;
+			case 'taxonomies_fields':
+				$results = $this->get_taxonomies_fields( $data );
+				break;
+			case 'terms':
+				$results = $this->get_terms( $data );
+				break;
+			case 'terms_fields':
+				$results = $this->get_terms_fields( $data );
+				break;
+			case 'users':
+				$results = $this->get_users( $data );
+				break;
+			default:
+				throw new \Exception( 'Invalid query type.' );
+		}
 
 		return [
 			'results' => $results,
@@ -98,7 +166,7 @@ class Module extends Base_Module {
 	 * @return array<int,array<string,int|string>>
 	 */
 	protected function get_options( $data ) {
-		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
 			throw new \Exception( 'Access denied.' );
 		}
 
@@ -133,12 +201,20 @@ class Module extends Base_Module {
 		}
 
 		foreach ( $object_types as $object_type ) {
-			$function = 'get_' . $object_type . '_fields';
-			if ( ! method_exists( 'DynamicVisibilityForElementor\Helper', $function ) ) {
-				// The method may not exist when get_fields is called by get_dsh_fields
-				continue;
+			switch ( $object_type ) {
+				case 'post':
+					$fields = Helper::get_post_fields( $data['q'] );
+					break;
+				case 'user':
+					$fields = Helper::get_user_fields( $data['q'] );
+					break;
+				case 'term':
+					$fields = Helper::get_term_fields( $data['q'] );
+					break;
+				default:
+					// The method may not exist when get_fields is called by get_dsh_fields
+					continue 2;
 			}
-			$fields = Helper::{$function}( $data['q'] ); //@phpstan-ignore-line
 			if ( ! empty( $fields ) ) {
 				foreach ( $fields as $field_key => $field_name ) {
 					$results[] = [
@@ -261,7 +337,26 @@ class Module extends Base_Module {
 		];
 
 		if ( ! empty( $types[ $object_type ]['function'] ) ) {
-			$other_results = call_user_func( [ $this, $types[ $object_type ]['function'] ], $types[ $object_type ]['data'] );
+			switch ( $object_type ) {
+				case 'acf':
+					$other_results = $this->get_acf( $types[ $object_type ]['data'] );
+					break;
+				case 'author':
+				case 'post':
+				case 'term':
+				case 'user':
+					$other_results = $this->get_fields( $types[ $object_type ]['data'] );
+					break;
+				case 'jet':
+					$other_results = $this->get_jet( $types[ $object_type ]['data'] );
+					break;
+				case 'metabox':
+					$other_results = $this->get_metabox( $types[ $object_type ]['data'] );
+					break;
+				default:
+					$other_results = [];
+					break;
+			}
 			$other_results_filtered = array_filter( $other_results, function ( $item ) use ( $object_type ) {
 				return \DynamicShortcodes\Plugin::instance()->library_manager->is_not_hidden_field(
 					[
@@ -343,8 +438,19 @@ class Module extends Base_Module {
 		}
 
 		$results = [];
-		$function = 'get_' . $data['object_type'] . '_metas';
-		$fields = Helper::{$function}( false, $data['q'] ); //@phpstan-ignore-line
+		switch ( $data['object_type'] ) {
+			case 'post':
+				$fields = Helper::get_post_metas( false, $data['q'] );
+				break;
+			case 'user':
+				$fields = Helper::get_user_metas( false, $data['q'] );
+				break;
+			case 'term':
+				$fields = Helper::get_term_metas( false, $data['q'] );
+				break;
+			default:
+				throw new \Exception( 'Invalid object type.' );
+		}
 		foreach ( $fields as $field_key => $field_name ) {
 			if ( $field_key ) {
 				$results[] = [
@@ -362,8 +468,13 @@ class Module extends Base_Module {
 		}
 
 		$results = [];
-		$function = 'get_' . $data['object_type'] . '_pods';
-		$fields = Helper::{$function}( false, $data['q'] ); //@phpstan-ignore-line
+		switch ( $data['object_type'] ) {
+			case 'relationship':
+				$fields = Helper::get_relationship_pods( false, $data['q'] );
+				break;
+			default:
+				throw new \Exception( 'Invalid object type.' );
+		}
 		foreach ( $fields as $field_key => $field_name ) {
 			if ( $field_key ) {
 				$results[] = [
@@ -771,13 +882,52 @@ class Module extends Base_Module {
 	}
 
 	/**
+	 * Get all user capabilities from all roles
+	 *
+	 * @param array<string,mixed> $data
+	 * @return array<int,array<string,string>>
+	 */
+	protected function get_capabilities( $data ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
+		$all_capabilities = [];
+		foreach ( wp_roles()->roles as $role ) {
+			foreach ( array_keys( $role['capabilities'] ?? [] ) as $cap ) {
+				$all_capabilities[ $cap ] = $cap;
+			}
+		}
+
+		// Filter by search term
+		if ( ! empty( $data['q'] ) ) {
+			$all_capabilities = array_filter( $all_capabilities, function ( $cap ) use ( $data ) {
+				return stripos( $cap, $data['q'] ) !== false;
+			});
+		}
+
+		// Sort alphabetically
+		ksort( $all_capabilities );
+
+		return array_map(
+			function ( $cap ) {
+				return [
+					'id' => $cap,
+					'text' => esc_attr( $cap ),
+				];
+			},
+			array_keys( $all_capabilities )
+		);
+	}
+
+	/**
 	 * Get Users and filter by search term
 	 *
 	 * @param array<string,mixed> $data
 	 * @return array<int,array<string,int|string>>
 	 */
 	protected function get_users( $data ) {
-		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+		if ( ! current_user_can( 'list_users' ) ) {
 			throw new \Exception( 'Access denied.' );
 		}
 
@@ -924,7 +1074,7 @@ class Module extends Base_Module {
 	 * Calls function to get value titles depending on ajax query type
 	 *
 	 * @param array<string,mixed> $request
-	 * @return array<string,mixed>
+	 * @return array<int|string,mixed>
 	 * @throws \Exception If query type is invalid or user lacks permissions
 	 */
 	public function ajax_call_control_value_titles( $request ) {
@@ -937,38 +1087,44 @@ class Module extends Base_Module {
 			throw new \Exception( 'Invalid query type.' );
 		}
 
-		// List of valid query types
-		$valid_query_types = [
-			'acf',
-			'acf_flexible_content_layouts',
-			'acfposts',
-			'metas',
-			'fields',
-			'dsh_fields',
-			'posts',
-			'terms',
-			'taxonomies',
-			'users',
-			'terms_fields',
-			'taxonomies_fields',
-			'search_and_filter_v3_query_ids',
-			'cryptocurrency_coins',
-			'cryptocurrency_convert',
-		];
-
 		$query_type = sanitize_key( $request['query_type'] );
 
-		if ( ! in_array( $query_type, $valid_query_types, true ) ) {
-			throw new \Exception( 'Invalid query type.' );
+		switch ( $query_type ) {
+			case 'acf':
+				return $this->get_value_titles_for_acf( $request );
+			case 'acf_flexible_content_layouts':
+				return $this->get_value_titles_for_acf_flexible_content_layouts( $request );
+			case 'acfposts':
+				return $this->get_value_titles_for_acfposts( $request );
+			case 'capabilities':
+				return $this->get_value_titles_for_capabilities( $request );
+			case 'cryptocurrency_coins':
+				return $this->get_value_titles_for_cryptocurrency_coins( $request );
+			case 'cryptocurrency_convert':
+				return $this->get_value_titles_for_cryptocurrency_convert( $request );
+			case 'dsh_fields':
+				return $this->get_value_titles_for_dsh_fields( $request );
+			case 'fields':
+				return $this->get_value_titles_for_fields( $request );
+			case 'metas':
+				return $this->get_value_titles_for_metas( $request );
+			case 'posts':
+				return $this->get_value_titles_for_posts( $request );
+			case 'search_and_filter_v3_query_ids':
+				return $this->get_value_titles_for_search_and_filter_v3_query_ids( $request );
+			case 'taxonomies':
+				return $this->get_value_titles_for_taxonomies( $request );
+			case 'taxonomies_fields':
+				return $this->get_value_titles_for_taxonomies_fields( $request );
+			case 'terms':
+				return $this->get_value_titles_for_terms( $request );
+			case 'terms_fields':
+				return $this->get_value_titles_for_terms_fields( $request );
+			case 'users':
+				return $this->get_value_titles_for_users( $request );
+			default:
+				throw new \Exception( 'Invalid query type.' );
 		}
-
-		$method = 'get_value_titles_for_' . $query_type;
-
-		if ( ! method_exists( $this, $method ) ) {
-			throw new \Exception( 'Query type handler not found.' );
-		}
-
-		return $this->$method( $request );
 	}
 
 	/**
@@ -1176,6 +1332,9 @@ class Module extends Base_Module {
 			}
 		} else {
 			foreach ( $ids as $id ) {
+				if ( ! current_user_can( 'read_post', $id ) ) {
+					continue;
+				}
 				$results[ $id ] = '[' . $id . '] ' . wp_kses_post( get_the_title( $id ) );
 			}
 		}
@@ -1244,6 +1403,27 @@ class Module extends Base_Module {
 				}
 			}
 		}
+		return $results;
+	}
+
+	/**
+	 * Get capability titles by IDs
+	 *
+	 * @param array<string,mixed> $request
+	 * @return array<string,string>
+	 */
+	protected function get_value_titles_for_capabilities( $request ) {
+		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
+			throw new \Exception( 'Access denied.' );
+		}
+
+		$ids = (array) $request['id'];
+		$results = [];
+
+		foreach ( $ids as $cap ) {
+			$results[ $cap ] = esc_attr( $cap );
+		}
+
 		return $results;
 	}
 

@@ -351,11 +351,10 @@ class Post extends Base {
 	 * @param array<string,mixed> $settings
 	 * @param array<string,mixed> &$triggers
 	 * @param array<string,mixed> &$conditions
-	 * @param int &$triggers_n
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	public function check_conditions( $settings, &$triggers, &$conditions, &$triggers_n, $element ) {
+	public function check_conditions( $settings, &$triggers, &$conditions, $element ) {
 		$post_ID = get_the_ID(); // Current post
 		if ( ! empty( $settings['dce_visibility_post_id'] ) ) {
 			switch ( $settings['dce_visibility_post_id'] ) {
@@ -382,7 +381,7 @@ class Post extends Base {
 				$triggers['dce_visibility_cpt'] = esc_html__( 'Post Type', 'dynamic-visibility-for-elementor' );
 
 				$cpt = get_post_type();
-				++$triggers_n;
+
 				if ( in_array( $cpt, $settings['dce_visibility_cpt'] ) ) {
 					$conditions['dce_visibility_cpt'] = esc_html__( 'Post Type', 'dynamic-visibility-for-elementor' );
 				}
@@ -397,7 +396,6 @@ class Post extends Base {
 					$visibility_post = $settings['dce_visibility_post'];
 				}
 
-				++$triggers_n;
 				if ( in_array( $post_ID, $visibility_post ) ) {
 					$conditions['dce_visibility_post'] = esc_html__( 'Post', 'dynamic-visibility-for-elementor' );
 				}
@@ -407,7 +405,7 @@ class Post extends Base {
 				$triggers['dce_visibility_tax'] = esc_html__( 'Taxonomy', 'dynamic-visibility-for-elementor' );
 
 				$tax = get_post_taxonomies();
-				++$triggers_n;
+
 				if ( in_array( $settings['dce_visibility_tax'], $tax ) ) {
 					// term
 					$terms = get_the_terms( $post_ID, $settings['dce_visibility_tax'] );
@@ -465,7 +463,6 @@ class Post extends Base {
 					$metafirst = false;
 				}
 
-				++$triggers_n;
 				if ( $metavalued ) {
 					$conditions['dce_visibility_meta'] = esc_html__( 'Post Metas', 'dynamic-visibility-for-elementor' );
 				}
@@ -475,7 +472,7 @@ class Post extends Base {
 				$triggers['dce_visibility_field'] = esc_html__( 'Post Field', 'dynamic-visibility-for-elementor' );
 				$postmeta = Helper::get_post_value( $post_ID, $settings['dce_visibility_field'] );
 				$condition_result = Helper::is_condition_satisfied( $postmeta, $settings['dce_visibility_field_status'], $settings['dce_visibility_field_value'] );
-				++$triggers_n;
+
 				if ( $condition_result ) {
 					$conditions['dce_visibility_field'] = esc_html__( 'Post Field', 'dynamic-visibility-for-elementor' );
 				}
@@ -483,7 +480,6 @@ class Post extends Base {
 			if ( isset( $settings['dce_visibility_root'] ) && $settings['dce_visibility_root'] ) {
 				$triggers['dce_visibility_root'] = esc_html__( 'Post is Root', 'dynamic-visibility-for-elementor' );
 
-				++$triggers_n;
 				if ( ! wp_get_post_parent_id( $post_ID ) ) {
 					$conditions['dce_visibility_root'] = esc_html__( 'Post is Root', 'dynamic-visibility-for-elementor' );
 				}
@@ -493,7 +489,7 @@ class Post extends Base {
 				$triggers['dce_visibility_format'] = esc_html__( 'Post Format', 'dynamic-visibility-for-elementor' );
 
 				$format = get_post_format( $post_ID ) ?: 'standard';
-				++$triggers_n;
+
 				if ( in_array( $format, $settings['dce_visibility_format'] ) ) {
 					$conditions['dce_visibility_format'] = esc_html__( 'Post Format', 'dynamic-visibility-for-elementor' );
 				}
@@ -509,7 +505,7 @@ class Post extends Base {
 					'post_status' => 'publish',
 				];
 				$children = get_children( $args );
-				++$triggers_n;
+
 				if ( ! empty( $children ) ) {
 					$conditions['dce_visibility_parent'] = esc_html__( 'Post is Parent', 'dynamic-visibility-for-elementor' );
 				}
@@ -525,7 +521,7 @@ class Post extends Base {
 					'post_status' => 'publish',
 				];
 				$children = get_children( $args );
-				++$triggers_n;
+
 				if ( empty( $children ) ) {
 					$conditions['dce_visibility_leaf'] = esc_html__( 'Post is Leaf', 'dynamic-visibility-for-elementor' );
 				}
@@ -545,7 +541,6 @@ class Post extends Base {
 					if ( ! empty( $children ) ) {
 						$parents = get_post_ancestors( $post_ID );
 						$node_level = count( $parents ) + 1;
-						++$triggers_n;
 						if ( empty( $settings['dce_visibility_node_level'] ) || $node_level == $settings['dce_visibility_node_level'] ) {
 							$conditions['dce_visibility_node'] = esc_html__( 'Post is Node', 'dynamic-visibility-for-elementor' );
 						}
@@ -558,7 +553,7 @@ class Post extends Base {
 
 				$parents = get_post_ancestors( $post_ID );
 				$node_level = count( $parents ) + 1;
-				++$triggers_n;
+
 				if ( $node_level == $settings['dce_visibility_level'] ) {
 					$conditions['dce_visibility_level'] = esc_html__( 'Post has Level', 'dynamic-visibility-for-elementor' );
 				}
@@ -569,7 +564,6 @@ class Post extends Base {
 
 				if ( $post_parent_ID = wp_get_post_parent_id( $post_ID ) ) {
 					$parent_ids = Helper::str_to_array( ',', $settings['dce_visibility_child_parent'] );
-					++$triggers_n;
 					if ( empty( $settings['dce_visibility_child_parent'] ) || in_array( $post_parent_ID, $parent_ids ) ) {
 						$conditions['dce_visibility_child'] = esc_html__( 'Post has Parent', 'dynamic-visibility-for-elementor' );
 					}
@@ -587,7 +581,6 @@ class Post extends Base {
 						'post_status' => 'publish',
 					];
 					$children = get_children( $args );
-					++$triggers_n;
 					if ( ! empty( $children ) && count( $children ) > 1 ) {
 						$conditions['dce_visibility_sibling'] = esc_html__( 'Post has Siblings', 'dynamic-visibility-for-elementor' );
 					}
@@ -631,7 +624,6 @@ class Post extends Base {
 						$term_posts = get_posts( $post_args );
 						if ( ! empty( $term_posts ) && count( $term_posts ) > 1 ) {
 							$posts_ids = wp_list_pluck( $term_posts, 'ID' );
-							++$triggers_n;
 							if ( in_array( $post_ID, $posts_ids ) ) {
 								$conditions['dce_visibility_friend'] = esc_html__( 'Post has Friends', 'dynamic-visibility-for-elementor' );
 								break;
@@ -644,7 +636,6 @@ class Post extends Base {
 
 		// Conditional Tags - Post
 		if ( ! empty( $settings['dce_visibility_conditional_tags_post'] ) && is_array( $settings['dce_visibility_conditional_tags_post'] ) ) {
-			++$triggers_n;
 
 			$callable_functions = array_filter( $settings['dce_visibility_conditional_tags_post'], function ( $function ) {
 				return in_array( $function, array_keys( self::get_whitelist_post_functions() ), true ) && is_callable( $function );
@@ -681,7 +672,6 @@ class Post extends Base {
 		// Conditional Tags - Page
 		if ( ! empty( $settings['dce_visibility_special'] ) && is_array( $settings['dce_visibility_special'] ) ) {
 			$triggers['dce_visibility_special'] = esc_html__( 'Conditional tags Special', 'dynamic-visibility-for-elementor' );
-			++$triggers_n;
 
 			$callable_functions = array_filter( $settings['dce_visibility_special'], function ( $function ) {
 				return in_array( $function, array_keys( self::get_whitelist_page_functions() ), true ) && is_callable( $function );

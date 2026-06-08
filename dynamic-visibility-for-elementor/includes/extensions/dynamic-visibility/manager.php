@@ -371,19 +371,16 @@ class Manager extends ExtensionPrototype {
 
 		$check_result = $this->triggers_manager->check_conditions( $settings, $element );
 
-		$triggers_n = $check_result['triggers_n'];
 		$conditions = $check_result['conditions'];
 		$triggers = $check_result['triggers'];
 
 		if ( isset( $settings['dce_visibility_logical_connective'] ) && $settings['dce_visibility_logical_connective'] === 'and' ) {
-			$triggered = $triggers_n && count( $conditions ) === $triggers_n;
+			$triggered = ! empty( $triggers ) && count( $conditions ) === count( $triggers );
 		} else {
 			$triggered = ! empty( $conditions );
 		}
 
 		$hidden = $display_mode_is_show ? ! $triggered : $triggered;
-
-		
 
 		// Frontend Inspector API
 		if ( $hidden ) {

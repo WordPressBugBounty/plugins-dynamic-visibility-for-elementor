@@ -52,6 +52,10 @@ class Notices {
 		$dismiss_key = $_GET['dve_dismiss'] ?? false;
 		if ( is_string( $dismiss_key ) ) {
 			$dismiss_key = sanitize_text_field( $dismiss_key );
+			$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( $_GET['_wpnonce'] ) : '';
+			if ( ! wp_verify_nonce( $nonce, self::DB_PREFIX . $dismiss_key ) ) {
+				return;
+			}
 			update_user_meta( get_current_user_id(), self::DB_PREFIX . $dismiss_key, true );
 			wp_die( 'Notice dismissed', 'Notice dismissed', [ 'response' => 200 ] );
 		}
@@ -68,9 +72,9 @@ class Notices {
 		$dismiss_attr = '';
 		if ( $dismiss_key ) {
 			$classes .= ' dce-dismissible-notice is-dismissible';
-			$dismiss_url = add_query_arg( array(
+			$dismiss_url = wp_nonce_url( add_query_arg( array(
 				'dve_dismiss' => $dismiss_key,
-			), admin_url() );
+			), admin_url() ), self::DB_PREFIX . $dismiss_key );
 			$dismiss_attr .= ' data-dismiss-url="' . esc_url( $dismiss_url ) . '"';
 		}
 		$icon_url = DVE_URL . '/assets/media/dce.png';

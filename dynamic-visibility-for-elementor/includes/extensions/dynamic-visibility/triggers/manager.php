@@ -403,13 +403,11 @@ class Manager {
 			return [
 				'triggers' => [],
 				'conditions' => [],
-				'triggers_n' => 0,
 			];
 		}
 
 		$triggers_list = [];
 		$triggers = [];
-		$triggers_list_n = 0;
 
 		foreach ( $settings['dce_visibility_triggers'] as $trigger ) {
 			if ( isset( $this->triggers[ $trigger ] ) ) {
@@ -423,7 +421,6 @@ class Manager {
 					$settings,
 					$triggers_list,
 					$triggers,
-					$triggers_list_n,
 					$element
 				);
 			}
@@ -432,7 +429,6 @@ class Manager {
 		return [
 			'triggers' => $triggers_list,
 			'conditions' => $triggers,
-			'triggers_n' => $triggers_list_n,
 		];
 	}
 }

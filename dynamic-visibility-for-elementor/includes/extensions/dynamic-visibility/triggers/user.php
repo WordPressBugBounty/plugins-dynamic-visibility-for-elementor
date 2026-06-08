@@ -51,10 +51,16 @@ class User extends Base {
 			'dce_visibility_can',
 			[
 				'label' => esc_html__( 'User can', 'dynamic-visibility-for-elementor' ),
-				'type' => Controls_Manager::TEXT,
-				'description' => esc_html__( 'Trigger by User capability, for example: "manage_options"', 'dynamic-visibility-for-elementor' ),
+				'type' => 'ooo_query',
+				'placeholder' => esc_html__( 'Select a capability', 'dynamic-visibility-for-elementor' ),
+				'description' => esc_html__( 'Select a capability from the list, or type a custom one and press Enter to add it. Per-user capabilities (added via add_cap) are not listed but can be entered here.', 'dynamic-visibility-for-elementor' ),
+				'label_block' => true,
+				'query_type' => 'capabilities',
 				'separator' => 'before',
-				'ai' => [
+				'select2options' => [
+					'tags' => true,
+				],
+				'dynamic' => [
 					'active' => false,
 				],
 			]
@@ -122,7 +128,7 @@ class User extends Base {
 			[
 				'label' => esc_html__( 'Referrer', 'dynamic-visibility-for-elementor' ),
 				'type' => Controls_Manager::SWITCHER,
-				'description' => esc_html__( 'Triggered when previous page is a specific page.', 'dynamic-visibility-for-elementor' ),
+				'description' => esc_html__( 'Triggered when previous page is a specific page. Note: the referrer is reported by the visitor and can be faked, so use it as a hint only, never to protect sensitive content.', 'dynamic-visibility-for-elementor' ),
 				'separator' => 'before',
 			]
 		);
@@ -169,17 +175,15 @@ class User extends Base {
 	 * @param array<string,mixed> $settings
 	 * @param array<string,mixed> &$triggers
 	 * @param array<string,mixed> &$conditions
-	 * @param int &$triggers_n
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	public function check_conditions( $settings, &$triggers, &$conditions, &$triggers_n, $element ) {
+	public function check_conditions( $settings, &$triggers, &$conditions, $element ) {
 		if ( ! isset( $settings['dce_visibility_everyone'] ) || ! $settings['dce_visibility_everyone'] ) {
 
 			//roles
 			if ( isset( $settings['dce_visibility_role'] ) && ! empty( $settings['dce_visibility_role'] ) ) {
 				$triggers['dce_visibility_role'] = esc_html__( 'User Role', 'dynamic-visibility-for-elementor' );
-				++$triggers_n;
 				$current_user = wp_get_current_user();
 				if ( $current_user->ID ) {
 					$user_roles = $current_user->roles; // An user could have multiple roles
@@ -226,7 +230,6 @@ class User extends Base {
 						}
 					}
 				}
-				++$triggers_n;
 				if ( $is_user ) {
 					$conditions['dce_visibility_users'] = esc_html__( 'Specific User', 'dynamic-visibility-for-elementor' );
 				}
@@ -240,25 +243,26 @@ class User extends Base {
 				if ( user_can( $user_id, $settings['dce_visibility_can'] ) ) {
 					$user_can = true;
 				}
-				++$triggers_n;
 				if ( $user_can ) {
 					$conditions['dce_visibility_can'] = esc_html__( 'User can', 'dynamic-visibility-for-elementor' );
 				}
 			}
 
 			if ( isset( $settings['dce_visibility_usermeta'] ) && ! empty( $settings['dce_visibility_usermeta'] ) ) {
-				$triggers['dce_visibility_usermeta'] = esc_html__( 'User Field', 'dynamic-visibility-for-elementor' );
+				$sensitive_fields = [ 'user_pass', 'pass', 'user_activation_key', 'activation_key' ];
+				if ( ! in_array( $settings['dce_visibility_usermeta'], $sensitive_fields, true ) ) {
+					$triggers['dce_visibility_usermeta'] = esc_html__( 'User Field', 'dynamic-visibility-for-elementor' );
 
-				$current_user = wp_get_current_user();
-				if ( Helper::is_validated_user_meta( $settings['dce_visibility_usermeta'] ) ) {
-					$usermeta = get_user_meta( $current_user->ID, $settings['dce_visibility_usermeta'], true ); // false for visitor
-				} else {
-					$usermeta = $current_user->{$settings['dce_visibility_usermeta']};
-				}
-				$condition_result = Helper::is_condition_satisfied( $usermeta, $settings['dce_visibility_usermeta_status'], $settings['dce_visibility_usermeta_value'] );
-				++$triggers_n;
-				if ( $condition_result ) {
-					$conditions['dce_visibility_usermeta'] = esc_html__( 'User Field', 'dynamic-visibility-for-elementor' );
+					$current_user = wp_get_current_user();
+					if ( Helper::is_validated_user_meta( $settings['dce_visibility_usermeta'] ) ) {
+						$usermeta = get_user_meta( $current_user->ID, $settings['dce_visibility_usermeta'], true ); // false for visitor
+					} else {
+						$usermeta = $current_user->{$settings['dce_visibility_usermeta']};
+					}
+					$condition_result = Helper::is_condition_satisfied( $usermeta, $settings['dce_visibility_usermeta_status'], $settings['dce_visibility_usermeta_value'] );
+					if ( $condition_result ) {
+						$conditions['dce_visibility_usermeta'] = esc_html__( 'User Field', 'dynamic-visibility-for-elementor' );
+					}
 				}
 			}
 
@@ -267,8 +271,8 @@ class User extends Base {
 				$triggers['dce_visibility_referrer_list'] = esc_html__( 'Referer', 'dynamic-visibility-for-elementor' );
 
 				if ( $_SERVER['HTTP_REFERER'] ) {
-					$pieces = explode( '/', sanitize_text_field( $_SERVER['HTTP_REFERER'] ) );
-					$referrer = parse_url( sanitize_text_field( $_SERVER['HTTP_REFERER'] ), PHP_URL_HOST );
+					$raw_referer = sanitize_text_field( wp_unslash( $_SERVER['HTTP_REFERER'] ) );
+					$referrer = parse_url( $raw_referer, PHP_URL_HOST );
 					$referrers = explode( PHP_EOL, $settings['dce_visibility_referrer_list'] );
 					$referrers = array_map( 'trim', $referrers );
 					$ref_found = false;
@@ -276,18 +280,17 @@ class User extends Base {
 						if ( $settings['dce_visibility_referrer_host_only'] === 'yes' ) {
 							if ( $aref == $referrer ||
 								( is_string( $referrer ) && $aref == str_replace( 'www.', '', $referrer ) ) ||
-								$aref == $_SERVER['HTTP_REFERER'] ) {
+								$aref == $raw_referer ) {
 								$ref_found = true;
 							}
 						} else {
 							$arefnh = preg_replace( '$^https?://$', '', $aref );
-							$refnh = preg_replace( '$^https?://$', '', $_SERVER['HTTP_REFERER'] );
+							$refnh = preg_replace( '$^https?://$', '', $raw_referer );
 							if ( $arefnh === $refnh ) {
 								$ref_found = true;
 							}
 						}
 					}
-					++$triggers_n;
 					if ( $ref_found ) {
 						$conditions['dce_visibility_referrer_list'] = esc_html__( 'Referer', 'dynamic-visibility-for-elementor' );
 					}
@@ -299,7 +302,6 @@ class User extends Base {
 
 				$ips = explode( ',', $settings['dce_visibility_ip'] );
 				$ips = array_map( 'trim', $ips );
-				++$triggers_n;
 				$client_ip = Helper::get_client_ip();
 				if ( $client_ip && in_array( $client_ip, $ips ) ) {
 					$conditions['dce_visibility_ip'] = esc_html__( 'Remote IP', 'dynamic-visibility-for-elementor' );
@@ -316,7 +318,6 @@ class User extends Base {
 				if ( ! empty( $dce_visibility_max_user[ $element->get_id() ] ) ) {
 					$dce_visibility_max_user_count = $dce_visibility_max_user[ $element->get_id() ];
 				}
-				++$triggers_n;
 				if ( $settings['dce_visibility_max_user'] >= $dce_visibility_max_user_count ) {
 					$conditions['dce_visibility_max_user'] = esc_html__( 'Max per User', 'dynamic-visibility-for-elementor' );
 				}

@@ -71,11 +71,10 @@ class DynamicTag extends Base {
 	 * @param array<string,mixed> $settings
 	 * @param array<string,mixed> &$triggers
 	 * @param array<string,mixed> &$conditions
-	 * @param int &$triggers_n
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	public function check_conditions( $settings, &$triggers, &$conditions, &$triggers_n, $element ) {
+	public function check_conditions( $settings, &$triggers, &$conditions, $element ) {
 		if ( ! empty( $settings['__dynamic__'] ) && ! empty( $settings['__dynamic__']['dce_visibility_dynamic_tag'] ) ) {
 			$triggers['dce_visibility_dynamic_tag'] = esc_html__( 'Dynamic Tag', 'dynamic-visibility-for-elementor' );
 
@@ -86,7 +85,6 @@ class DynamicTag extends Base {
 				$settings['dce_visibility_dynamic_tag_value']
 			);
 
-			++$triggers_n;
 			if ( $condition_result ) {
 				$conditions['dce_visibility_dynamic_tag'] = esc_html__( 'Dynamic Tag', 'dynamic-visibility-for-elementor' );
 			}

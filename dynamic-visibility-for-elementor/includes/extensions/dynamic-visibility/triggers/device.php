@@ -29,7 +29,7 @@ class Device extends Base {
 						'icon' => 'fa fa-mobile',
 					],
 				],
-				'description' => esc_html__( 'Not really responsive, remove the element from the code based on the user\'s device. This trigger uses native WP device detection.', 'dynamic-visibility-for-elementor' ) . ' <a href="https://codex.wordpress.org/Function_Reference/wp_is_mobile" target="_blank">' . esc_html__( 'Read more.', 'dynamic-visibility-for-elementor' ) . '</a>',
+				'description' => esc_html__( 'Not really responsive, remove the element from the code based on the user\'s device. This trigger uses native WP device detection. Note: the device is reported by the visitor and can be faked, so use this for layout only, never to protect sensitive content.', 'dynamic-visibility-for-elementor' ) . ' <a href="https://codex.wordpress.org/Function_Reference/wp_is_mobile" target="_blank">' . esc_html__( 'Read more.', 'dynamic-visibility-for-elementor' ) . '</a>',
 
 			]
 		);
@@ -49,7 +49,7 @@ class Device extends Base {
 					'is_lynx' => 'Lynx',
 					'is_iphone' => 'iPhone',
 				],
-				'description' => esc_html__( 'Trigger visibility for a specific browser.', 'dynamic-visibility-for-elementor' ),
+				'description' => esc_html__( 'Trigger visibility for a specific browser. Note: the browser is reported by the visitor and can be faked, so use this for layout only, never to protect sensitive content.', 'dynamic-visibility-for-elementor' ),
 				'multiple' => true,
 				'separator' => 'before',
 			]
@@ -60,11 +60,10 @@ class Device extends Base {
 	 * @param array<string,mixed> $settings
 	 * @param array<string,mixed> &$triggers
 	 * @param array<string,mixed> &$conditions
-	 * @param int &$triggers_n
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	public function check_conditions( $settings, &$triggers, &$conditions, &$triggers_n, $element ) {
+	public function check_conditions( $settings, &$triggers, &$conditions, $element ) {
 		if ( ! isset( $settings['dce_visibility_device'] ) || ! $settings['dce_visibility_device'] ) {
 			$ahidden = false;
 
@@ -73,17 +72,13 @@ class Device extends Base {
 				$triggers['dce_visibility_responsive'] = esc_html__( 'Responsive', 'dynamic-visibility-for-elementor' );
 
 				if ( wp_is_mobile() ) {
-					++$triggers_n;
 					if ( $settings['dce_visibility_responsive'] == 'mobile' ) {
 						$conditions['dce_visibility_responsive'] = esc_html__( 'Responsive: is Mobile', 'dynamic-visibility-for-elementor' );
 						$ahidden = true;
 					}
-				} else {
-					++$triggers_n;
-					if ( $settings['dce_visibility_responsive'] == 'desktop' ) {
+				} elseif ( $settings['dce_visibility_responsive'] == 'desktop' ) {
 						$conditions['dce_visibility_responsive'] = esc_html__( 'Responsive: is Desktop', 'dynamic-visibility-for-elementor' );
 						$ahidden = true;
-					}
 				}
 			}
 
@@ -92,13 +87,14 @@ class Device extends Base {
 				$triggers['dce_visibility_browser'] = esc_html__( 'Browser', 'dynamic-visibility-for-elementor' );
 
 				$is_browser = false;
+				$allowed_browsers = [ 'is_chrome', 'is_gecko', 'is_safari', 'is_IE', 'is_edge', 'is_NS4', 'is_opera', 'is_lynx', 'is_iphone' ];
 				foreach ( $settings['dce_visibility_browser'] as $browser ) {
-					global $$browser;
-					if ( isset( $$browser ) && $$browser ) {
-						$is_browser = true;
+					if ( in_array( $browser, $allowed_browsers, true ) ) {
+						if ( ! empty( $GLOBALS[ $browser ] ) ) {
+							$is_browser = true;
+						}
 					}
 				}
-				++$triggers_n;
 				if ( $is_browser ) {
 					$conditions['dce_visibility_browser'] = esc_html__( 'Browser', 'dynamic-visibility-for-elementor' );
 					$ahidden = true;

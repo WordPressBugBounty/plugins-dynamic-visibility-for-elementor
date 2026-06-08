@@ -17,11 +17,6 @@ abstract class Base {
 	protected $conditions = [];
 
 	/**
-	 * @var int
-	 */
-	protected $triggers_n = 0;
-
-	/**
 	 * Check if the trigger should be available
 	 *
 	 * @return bool
@@ -49,9 +44,8 @@ abstract class Base {
 	 * @param array<string,mixed> $settings
 	 * @param array<string,mixed> &$triggers
 	 * @param array<string,mixed> &$conditions
-	 * @param int &$triggers_n
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	abstract public function check_conditions( $settings, &$triggers, &$conditions, &$triggers_n, $element );
+	abstract public function check_conditions( $settings, &$triggers, &$conditions, $element );
 }

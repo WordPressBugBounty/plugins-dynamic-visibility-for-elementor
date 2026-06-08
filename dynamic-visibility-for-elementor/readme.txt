@@ -2,9 +2,9 @@
 Contributors: dynamicooo
 Tags: elementor, hide, conditional, schedule, woocommerce
 Requires at least: 5.2
-Tested up to: 6.9
+Tested up to: 7.0
 Requires PHP: 7.1
-Stable tag: 6.0.2
+Stable tag: 6.0.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -111,7 +111,17 @@ Please leave us a good review rating. We appreciate your support.
 
 == Changelog ==
 
-= 6.0.2 = 
+= 6.0.3 =
+* Tweak: compatibility tags for Elementor 4.1.1 and Elementor Pro 4.1.0
+* Tweak: tested up to WordPress 7.0
+* Tweak: the "User can" trigger now shows a searchable dropdown of available capabilities
+* Fix: the "User can" trigger now lets you type custom capabilities again, including per-user capabilities that are not registered on any role
+* Fix: date conditions with invalid date values could produce incorrect visibility results
+* Fix: WooCommerce trigger were not counted in AND mode evaluation
+* Fix: Post and Archive triggers (Has Parent, Has Siblings, Is Node, Has Friends, Archive Type) were skipped instead of failing when context didn't apply in AND mode
+* Minor fixes
+
+= 6.0.2 =
 * Tweak: compatibility tags for Elementor 3.34.1 and Elementor Pro 3.33.0
 * Tweak: added new comparison options: "Equal to (ignore case)", "Not equal to (ignore case)", "Less than or equal to", "Greater than or equal to", "Starts with", "Ends with", "Is not one of"
 

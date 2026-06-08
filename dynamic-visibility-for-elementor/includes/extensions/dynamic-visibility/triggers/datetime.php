@@ -172,11 +172,10 @@ class DateTime extends Base {
 	 * @param array<string,mixed> $settings
 	 * @param array<string,mixed> &$triggers
 	 * @param array<string,mixed> &$conditions
-	 * @param int &$triggers_n
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	public function check_conditions( $settings, &$triggers, &$conditions, &$triggers_n, $element ) {
+	public function check_conditions( $settings, &$triggers, &$conditions, $element ) {
 		if ( $settings['dce_visibility_date_dynamic'] ) {
 			if ( $settings['dce_visibility_date_dynamic_from'] && $settings['dce_visibility_date_dynamic_to'] ) {
 				$triggers['date'] = esc_html__( 'Date Dynamic', 'dynamic-visibility-for-elementor' );
@@ -186,8 +185,7 @@ class DateTime extends Base {
 				// between
 				$dateTo = strtotime( $settings['dce_visibility_date_dynamic_to'] );
 				$dateFrom = strtotime( $settings['dce_visibility_date_dynamic_from'] );
-				++$triggers_n;
-				if ( current_time( 'timestamp' ) >= $dateFrom && current_time( 'timestamp' ) <= $dateTo ) {
+				if ( $dateFrom !== false && $dateTo !== false && current_time( 'timestamp' ) >= $dateFrom && current_time( 'timestamp' ) <= $dateTo ) {
 					$conditions['date'] = esc_html__( 'Date Dynamic', 'dynamic-visibility-for-elementor' );
 				}
 			} else {
@@ -195,8 +193,7 @@ class DateTime extends Base {
 					$triggers['dce_visibility_date_dynamic_from'] = esc_html__( 'Date Dynamic From', 'dynamic-visibility-for-elementor' );
 
 					$dateFrom = strtotime( $settings['dce_visibility_date_dynamic_from'] );
-					++$triggers_n;
-					if ( current_time( 'timestamp' ) >= $dateFrom ) {
+					if ( $dateFrom !== false && current_time( 'timestamp' ) >= $dateFrom ) {
 						$conditions['dce_visibility_date_dynamic_from'] = esc_html__( 'Date Dynamic From', 'dynamic-visibility-for-elementor' );
 					}
 				}
@@ -204,22 +201,20 @@ class DateTime extends Base {
 					$triggers['dce_visibility_date_dynamic_to'] = esc_html__( 'Date Dynamic To', 'dynamic-visibility-for-elementor' );
 
 					$dateTo = strtotime( $settings['dce_visibility_date_dynamic_to'] );
-					++$triggers_n;
-					if ( current_time( 'timestamp' ) <= $dateTo ) {
+					if ( $dateTo !== false && current_time( 'timestamp' ) <= $dateTo ) {
 						$conditions['dce_visibility_date_dynamic_to'] = esc_html__( 'Date Dynamic To', 'dynamic-visibility-for-elementor' );
 					}
 				}
 			}
 		} elseif ( $settings['dce_visibility_date_from'] && $settings['dce_visibility_date_to'] ) {
-				$triggers['date'] = esc_html__( 'Date', 'dynamic-visibility-for-elementor' );
-				$triggers['dce_visibility_date_from'] = esc_html__( 'Date From', 'dynamic-visibility-for-elementor' );
-				$triggers['dce_visibility_date_to'] = esc_html__( 'Date To', 'dynamic-visibility-for-elementor' );
+			$triggers['date'] = esc_html__( 'Date', 'dynamic-visibility-for-elementor' );
+			$triggers['dce_visibility_date_from'] = esc_html__( 'Date From', 'dynamic-visibility-for-elementor' );
+			$triggers['dce_visibility_date_to'] = esc_html__( 'Date To', 'dynamic-visibility-for-elementor' );
 
-				// between
-				$dateTo = strtotime( $settings['dce_visibility_date_to'] );
-				$dateFrom = strtotime( $settings['dce_visibility_date_from'] );
-				++$triggers_n;
-			if ( current_time( 'timestamp' ) >= $dateFrom && current_time( 'timestamp' ) <= $dateTo ) {
+			// between
+			$dateTo = strtotime( $settings['dce_visibility_date_to'] );
+			$dateFrom = strtotime( $settings['dce_visibility_date_from'] );
+			if ( $dateFrom !== false && $dateTo !== false && current_time( 'timestamp' ) >= $dateFrom && current_time( 'timestamp' ) <= $dateTo ) {
 				$conditions['date'] = esc_html__( 'Date', 'dynamic-visibility-for-elementor' );
 			}
 		} else {
@@ -227,8 +222,7 @@ class DateTime extends Base {
 				$triggers['dce_visibility_date_from'] = esc_html__( 'Date From', 'dynamic-visibility-for-elementor' );
 
 				$dateFrom = strtotime( $settings['dce_visibility_date_from'] );
-				++$triggers_n;
-				if ( current_time( 'timestamp' ) >= $dateFrom ) {
+				if ( $dateFrom !== false && current_time( 'timestamp' ) >= $dateFrom ) {
 					$conditions['dce_visibility_date_from'] = esc_html__( 'Date From', 'dynamic-visibility-for-elementor' );
 				}
 			}
@@ -236,8 +230,7 @@ class DateTime extends Base {
 				$triggers['dce_visibility_date_to'] = esc_html__( 'Date To', 'dynamic-visibility-for-elementor' );
 
 				$dateTo = strtotime( $settings['dce_visibility_date_to'] );
-				++$triggers_n;
-				if ( current_time( 'timestamp' ) <= $dateTo ) {
+				if ( $dateTo !== false && current_time( 'timestamp' ) <= $dateTo ) {
 					$conditions['dce_visibility_date_to'] = esc_html__( 'Date To', 'dynamic-visibility-for-elementor' );
 				}
 			}
@@ -247,7 +240,6 @@ class DateTime extends Base {
 			$triggers['period'] = esc_html__( 'Period', 'dynamic-visibility-for-elementor' );
 			$triggers['dce_visibility_period_from'] = esc_html__( 'Period From', 'dynamic-visibility-for-elementor' );
 			$triggers['dce_visibility_period_to'] = esc_html__( 'Period To', 'dynamic-visibility-for-elementor' );
-			++$triggers_n;
 
 			$period_from = \DateTime::createFromFormat( 'd/m H:i:s', $settings['dce_visibility_period_from'] . ' 00:00:00' );
 			$period_to = \DateTime::createFromFormat( 'd/m H:i:s', $settings['dce_visibility_period_to'] . ' 23:59:59' );
@@ -266,14 +258,12 @@ class DateTime extends Base {
 			if ( $settings['dce_visibility_period_from'] ) {
 				$triggers['dce_visibility_period_from'] = esc_html__( 'Period From', 'dynamic-visibility-for-elementor' );
 
-				++$triggers_n;
 				if ( date_i18n( 'm/d' ) >= $settings['dce_visibility_period_from'] ) {
 					$conditions['dce_visibility_period_from'] = esc_html__( 'Period From', 'dynamic-visibility-for-elementor' );
 				}
 			}
 			if ( $settings['dce_visibility_period_to'] ) {
 				$triggers['dce_visibility_period_to'] = esc_html__( 'Period To', 'dynamic-visibility-for-elementor' );
-				++$triggers_n;
 				if ( date_i18n( 'm/d' ) <= $settings['dce_visibility_period_to'] ) {
 					$conditions['dce_visibility_period_to'] = esc_html__( 'Period To', 'dynamic-visibility-for-elementor' );
 				}
@@ -283,7 +273,6 @@ class DateTime extends Base {
 		if ( ! empty( $settings['dce_visibility_time_week'] ) ) {
 			$triggers['dce_visibility_time_week'] = esc_html__( 'Day of Week', 'dynamic-visibility-for-elementor' );
 
-			++$triggers_n;
 			if ( in_array( current_time( 'w' ), $settings['dce_visibility_time_week'] ) ) {
 				$conditions['dce_visibility_time_week'] = esc_html__( 'Day of Week', 'dynamic-visibility-for-elementor' );
 			}
@@ -296,7 +285,6 @@ class DateTime extends Base {
 
 			$time_from = $settings['dce_visibility_time_from'];
 			$time_to = $settings['dce_visibility_time_to'];
-			++$triggers_n;
 
 			if ( $time_from <= $time_to ) {
 				if ( current_time( 'H:i' ) >= $time_from && current_time( 'H:i' ) <= $time_to ) {
@@ -313,7 +301,6 @@ class DateTime extends Base {
 				$triggers['dce_visibility_time_from'] = esc_html__( 'Time From', 'dynamic-visibility-for-elementor' );
 
 				$time_from = $settings['dce_visibility_time_from'];
-				++$triggers_n;
 				if ( current_time( 'H:i' ) >= $time_from ) {
 					$conditions['dce_visibility_time_from'] = esc_html__( 'Time From', 'dynamic-visibility-for-elementor' );
 				}
@@ -322,7 +309,6 @@ class DateTime extends Base {
 				$triggers['dce_visibility_time_to'] = esc_html__( 'Time To', 'dynamic-visibility-for-elementor' );
 
 				$time_to = ( $settings['dce_visibility_time_to'] == '00:00' ) ? '24:00' : $settings['dce_visibility_time_to'];
-				++$triggers_n;
 				if ( current_time( 'H:i' ) <= $time_to ) {
 					$conditions['dce_visibility_time_to'] = esc_html__( 'Time To', 'dynamic-visibility-for-elementor' );
 				}

@@ -36,6 +36,7 @@ class Context extends Base {
 					'SERVER' => 'SERVER',
 				],
 				'default' => 'REQUEST',
+				'description' => esc_html__( 'Warning: with the SERVER method, HTTP_* keys come from request headers sent by the visitor and can be faked. Use this as a non-security hint only, never to protect sensitive content.', 'dynamic-visibility-for-elementor' ),
 				'condition' => [
 					'dce_visibility_parameter!' => '',
 				],
@@ -162,11 +163,10 @@ class Context extends Base {
 	 * @param array<string,mixed> $settings
 	 * @param array<string,mixed> &$triggers
 	 * @param array<string,mixed> &$conditions
-	 * @param int &$triggers_n
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	public function check_conditions( $settings, &$triggers, &$conditions, &$triggers_n, $element ) {
+	public function check_conditions( $settings, &$triggers, &$conditions, $element ) {
 		if ( isset( $settings['dce_visibility_parameter'] ) && $settings['dce_visibility_parameter'] ) {
 			$triggers['dce_visibility_parameter'] = esc_html__( 'Parameter', 'dynamic-visibility-for-elementor' );
 
@@ -191,7 +191,6 @@ class Context extends Base {
 					}
 			}
 			$condition_result = Helper::is_condition_satisfied( $my_val, $settings['dce_visibility_parameter_status'], $settings['dce_visibility_parameter_value'] );
-			++$triggers_n;
 			if ( $condition_result ) {
 				$conditions['dce_visibility_parameter'] = esc_html__( 'Parameter', 'dynamic-visibility-for-elementor' );
 			}
@@ -220,7 +219,6 @@ class Context extends Base {
 			if ( Helper::is_plugin_active( 'weglot' ) ) {
 				$current_language = weglot_get_current_language();
 			}
-			++$triggers_n;
 			if ( in_array( $current_language, $settings['dce_visibility_lang'] ) ) {
 				$conditions['dce_visibility_lang'] = esc_html__( 'Language', 'dynamic-visibility-for-elementor' );
 			}
@@ -230,7 +228,6 @@ class Context extends Base {
 			$triggers['dce_visibility_max_day'] = esc_html__( 'Max Day', 'dynamic-visibility-for-elementor' );
 			$dce_visibility_max = get_option( 'dce_visibility_max', [] );
 			$today = date( 'Ymd' );
-			++$triggers_n;
 			if ( isset( $dce_visibility_max[ $element->get_id() ] ) && isset( $dce_visibility_max[ $element->get_id() ]['day'] ) && isset( $dce_visibility_max[ $element->get_id() ]['day'][ $today ] ) ) {
 				if ( $settings['dce_visibility_max_day'] >= $dce_visibility_max[ $element->get_id() ]['day'][ $today ] ) {
 					$conditions['dce_visibility_max_day'] = esc_html__( 'Max per Day', 'dynamic-visibility-for-elementor' );
@@ -242,7 +239,6 @@ class Context extends Base {
 		if ( ! empty( $settings['dce_visibility_max_total'] ) ) {
 			$triggers['dce_visibility_max_total'] = esc_html__( 'Max Total', 'dynamic-visibility-for-elementor' );
 			$dce_visibility_max = get_option( 'dce_visibility_max', [] );
-			++$triggers_n;
 			if ( isset( $dce_visibility_max[ $element->get_id() ] ) && isset( $dce_visibility_max[ $element->get_id() ]['total'] ) ) {
 				if ( $settings['dce_visibility_max_total'] >= $dce_visibility_max[ $element->get_id() ]['total'] ) {
 					$conditions['dce_visibility_max_total'] = esc_html__( 'Max Total', 'dynamic-visibility-for-elementor' );
@@ -253,8 +249,6 @@ class Context extends Base {
 		}
 
 		if ( ! empty( $settings['dce_visibility_conditional_tags_site'] ) && is_array( $settings['dce_visibility_conditional_tags_site'] ) ) {
-			++$triggers_n;
-
 			$callable_functions = array_filter( $settings['dce_visibility_conditional_tags_site'], function ( $function ) {
 				return in_array( $function, array_keys( self::get_whitelist_site_functions() ), true ) && is_callable( $function );
 			});

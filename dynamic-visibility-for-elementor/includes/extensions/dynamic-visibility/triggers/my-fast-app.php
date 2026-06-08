@@ -40,11 +40,10 @@ class MyFastApp extends Base {
 	 * @param array<string,mixed> $settings
 	 * @param array<string,mixed> &$triggers
 	 * @param array<string,mixed> &$conditions
-	 * @param int &$triggers_n
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	public function check_conditions( $settings, &$triggers, &$conditions, &$triggers_n, $element ) {
+	public function check_conditions( $settings, &$triggers, &$conditions, $element ) {
 		if ( isset( $settings['dce_visibility_myfastapp'] ) &&
 			'all' !== $settings['dce_visibility_myfastapp'] ) {
 

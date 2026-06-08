@@ -103,11 +103,10 @@ class WooCommerce extends Base {
 	 * @param array<string,mixed> $settings
 	 * @param array<string,mixed> &$triggers
 	 * @param array<string,mixed> &$conditions
-	 * @param int &$triggers_n
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	public function check_conditions( $settings, &$triggers, &$conditions, &$triggers_n, $element ) {
+	public function check_conditions( $settings, &$triggers, &$conditions, $element ) {
 		if ( 'select' !== $settings['dce_visibility_woo_cart'] ) {
 			$triggers['dce_visibility_woo_cart'] = esc_html__( 'Cart is', 'dynamic-visibility-for-elementor' );
 			$cart_is_empty = WC()->cart->get_cart_contents_count() === 0;
@@ -130,7 +129,6 @@ class WooCommerce extends Base {
 			$product_id = $settings['dce_visibility_woo_product_id_static'];
 			$product_cart_id = WC()->cart->generate_cart_id( $product_id );
 			$in_cart = WC()->cart->find_product_in_cart( $product_cart_id );
-			++$triggers_n;
 			if ( $in_cart ) {
 				$conditions['dce_visibility_woo_product_id_static'] = esc_html__( 'Product in the cart', 'dynamic-visibility-for-elementor' );
 			}
@@ -190,7 +188,6 @@ class WooCommerce extends Base {
 					if ( \Elementor\Plugin::$instance->editor->is_edit_mode() ) {
 						$has_access = true;
 					}
-					++$triggers_n;
 					if ( $has_access ) {
 						$conditions['dce_visibility_woo_membership_post'] = esc_html__( 'Woo Membership Post', 'dynamic-visibility-for-elementor' );
 					}
@@ -215,7 +212,6 @@ class WooCommerce extends Base {
 						$user_members = [];
 						if ( empty( $member_plans ) ) {
 							// not member
-							++$triggers_n;
 							if ( in_array( 0, $settings['dce_visibility_woo_membership'] ) ) {
 								$conditions['dce_visibility_woo_membership'] = esc_html__( 'Woo Membership', 'dynamic-visibility-for-elementor' );
 							}
@@ -225,7 +221,6 @@ class WooCommerce extends Base {
 								$user_members[] = $member->post_parent;
 							}
 							$tmp_members = array_intersect( $user_members, $settings['dce_visibility_woo_membership'] );
-							++$triggers_n;
 							if ( ! empty( $tmp_members ) ) {
 								$conditions['dce_visibility_woo_membership'] = esc_html__( 'Woo Membership', 'dynamic-visibility-for-elementor' );
 							}

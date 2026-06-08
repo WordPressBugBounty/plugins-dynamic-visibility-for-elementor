@@ -50,13 +50,22 @@ trait Filesystem {
 		$home_path = wp_normalize_path( ABSPATH );
 		$path = $home_path . $relative_path;
 
-		$normalized_path = wp_normalize_path( $path );
-
-		if ( strpos( $normalized_path, $home_path ) !== 0 ) {
-			// Invalid path or outside the allowed directory
+		$resolved_path = realpath( $path );
+		if ( $resolved_path === false ) {
 			return false;
 		}
 
-		return $path;
+		$allowed_bases = array_filter( [
+			realpath( ABSPATH ),
+			realpath( wp_upload_dir()['basedir'] ),
+		], fn( $v ) => $v !== false );
+
+		foreach ( $allowed_bases as $base ) {
+			if ( strpos( $resolved_path, rtrim( $base, DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR ) === 0 ) {
+				return $resolved_path;
+			}
+		}
+
+		return false;
 	}
 }
