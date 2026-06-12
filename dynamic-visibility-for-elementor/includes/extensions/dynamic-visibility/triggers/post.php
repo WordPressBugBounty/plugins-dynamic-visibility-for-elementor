@@ -351,10 +351,11 @@ class Post extends Base {
 	 * @param array<string,mixed> $settings
 	 * @param array<string,mixed> &$triggers
 	 * @param array<string,mixed> &$conditions
+	 * @param array<string,mixed> &$required
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	public function check_conditions( $settings, &$triggers, &$conditions, $element ) {
+	public function check_conditions( $settings, &$triggers, &$conditions, &$required, $element ) {
 		$post_ID = get_the_ID(); // Current post
 		if ( ! empty( $settings['dce_visibility_post_id'] ) ) {
 			switch ( $settings['dce_visibility_post_id'] ) {
@@ -379,6 +380,7 @@ class Post extends Base {
 			// cpt
 			if ( isset( $settings['dce_visibility_cpt'] ) && ! empty( $settings['dce_visibility_cpt'] ) && is_array( $settings['dce_visibility_cpt'] ) ) {
 				$triggers['dce_visibility_cpt'] = esc_html__( 'Post Type', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_cpt'] = true;
 
 				$cpt = get_post_type();
 
@@ -390,6 +392,7 @@ class Post extends Base {
 			// post
 			if ( ! empty( $settings['dce_visibility_post'] ) && is_array( $settings['dce_visibility_post'] ) ) {
 				$triggers['dce_visibility_post'] = esc_html__( 'Post', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_post'] = true;
 				if ( Helper::is_plugin_active( 'wpml' ) ) {
 					$visibility_post = Helper::wpml_translate_object_id( $settings['dce_visibility_post'] );
 				} else {
@@ -421,6 +424,7 @@ class Post extends Base {
 
 					$tkey = 'dce_visibility_term_' . $settings['dce_visibility_tax'];
 					if ( ! empty( $settings[ $tkey ] ) && is_array( $settings[ $tkey ] ) ) {
+						$required[ $tkey ] = true;
 						if ( ! empty( $terms ) ) {
 							// Retrieve terms searched on the current language
 							$term_searched_current_language = Helper::wpml_translate_object_id_by_type( $settings[ $tkey ], $settings['dce_visibility_tax'] );
@@ -429,6 +433,7 @@ class Post extends Base {
 							}
 						}
 					} else {
+						$required['dce_visibility_tax'] = true;
 						$conditions['dce_visibility_tax'] = esc_html__( 'Taxonomy', 'dynamic-visibility-for-elementor' );
 					}
 				}
@@ -436,6 +441,7 @@ class Post extends Base {
 			// meta
 			if ( isset( $settings['dce_visibility_meta'] ) && is_array( $settings['dce_visibility_meta'] ) && ! empty( $settings['dce_visibility_meta'] ) ) {
 				$triggers['dce_visibility_meta'] = esc_html__( 'Post Metas', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_meta'] = true;
 
 				$post_metas = $settings['dce_visibility_meta'];
 				$metafirst = true;
@@ -470,6 +476,7 @@ class Post extends Base {
 
 			if ( isset( $settings['dce_visibility_field'] ) && ! empty( $settings['dce_visibility_field'] ) ) {
 				$triggers['dce_visibility_field'] = esc_html__( 'Post Field', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_field'] = true;
 				$postmeta = Helper::get_post_value( $post_ID, $settings['dce_visibility_field'] );
 				$condition_result = Helper::is_condition_satisfied( $postmeta, $settings['dce_visibility_field_status'], $settings['dce_visibility_field_value'] );
 
@@ -479,6 +486,7 @@ class Post extends Base {
 			}
 			if ( isset( $settings['dce_visibility_root'] ) && $settings['dce_visibility_root'] ) {
 				$triggers['dce_visibility_root'] = esc_html__( 'Post is Root', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_root'] = true;
 
 				if ( ! wp_get_post_parent_id( $post_ID ) ) {
 					$conditions['dce_visibility_root'] = esc_html__( 'Post is Root', 'dynamic-visibility-for-elementor' );
@@ -487,6 +495,7 @@ class Post extends Base {
 
 			if ( isset( $settings['dce_visibility_format'] ) && ! empty( $settings['dce_visibility_format'] ) ) {
 				$triggers['dce_visibility_format'] = esc_html__( 'Post Format', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_format'] = true;
 
 				$format = get_post_format( $post_ID ) ?: 'standard';
 
@@ -497,6 +506,7 @@ class Post extends Base {
 
 			if ( isset( $settings['dce_visibility_parent'] ) && $settings['dce_visibility_parent'] ) {
 				$triggers['dce_visibility_parent'] = esc_html__( 'Post is Parent', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_parent'] = true;
 
 				$args = [
 					'post_parent' => $post_ID,
@@ -513,6 +523,7 @@ class Post extends Base {
 
 			if ( isset( $settings['dce_visibility_leaf'] ) && $settings['dce_visibility_leaf'] ) {
 				$triggers['dce_visibility_leaf'] = esc_html__( 'Post is Leaf', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_leaf'] = true;
 
 				$args = [
 					'post_parent' => $post_ID,
@@ -529,6 +540,7 @@ class Post extends Base {
 
 			if ( isset( $settings['dce_visibility_node'] ) && $settings['dce_visibility_node'] ) {
 				$triggers['dce_visibility_node'] = esc_html__( 'Post is Node', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_node'] = true;
 
 				if ( wp_get_post_parent_id( $post_ID ) ) {
 					$args = [
@@ -550,6 +562,7 @@ class Post extends Base {
 
 			if ( isset( $settings['dce_visibility_level'] ) && $settings['dce_visibility_level'] ) {
 				$triggers['dce_visibility_level'] = esc_html__( 'Post is Node', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_level'] = true;
 
 				$parents = get_post_ancestors( $post_ID );
 				$node_level = count( $parents ) + 1;
@@ -561,6 +574,7 @@ class Post extends Base {
 
 			if ( isset( $settings['dce_visibility_child'] ) && $settings['dce_visibility_child'] ) {
 				$triggers['dce_visibility_child'] = esc_html__( 'Post has Parent', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_child'] = true;
 
 				if ( $post_parent_ID = wp_get_post_parent_id( $post_ID ) ) {
 					$parent_ids = Helper::str_to_array( ',', $settings['dce_visibility_child_parent'] );
@@ -572,6 +586,7 @@ class Post extends Base {
 
 			if ( isset( $settings['dce_visibility_sibling'] ) && $settings['dce_visibility_sibling'] ) {
 				$triggers['dce_visibility_sibling'] = esc_html__( 'Post has Siblings', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_sibling'] = true;
 
 				if ( $post_parent_ID = wp_get_post_parent_id( $post_ID ) ) {
 					$args = [
@@ -589,6 +604,7 @@ class Post extends Base {
 
 			if ( isset( $settings['dce_visibility_friend'] ) && $settings['dce_visibility_friend'] ) {
 				$triggers['dce_visibility_friend'] = esc_html__( 'Post has Friends', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_friend'] = true;
 
 				$posts_ids = [];
 				if ( $settings['dce_visibility_friend_term'] ) {
@@ -637,6 +653,7 @@ class Post extends Base {
 		// Conditional Tags - Post
 		if ( ! empty( $settings['dce_visibility_conditional_tags_post'] ) && is_array( $settings['dce_visibility_conditional_tags_post'] ) ) {
 
+			$required['dce_visibility_conditional_tags_post'] = true;
 			$callable_functions = array_filter( $settings['dce_visibility_conditional_tags_post'], function ( $function ) {
 				return in_array( $function, array_keys( self::get_whitelist_post_functions() ), true ) && is_callable( $function );
 			});
@@ -672,6 +689,7 @@ class Post extends Base {
 		// Conditional Tags - Page
 		if ( ! empty( $settings['dce_visibility_special'] ) && is_array( $settings['dce_visibility_special'] ) ) {
 			$triggers['dce_visibility_special'] = esc_html__( 'Conditional tags Special', 'dynamic-visibility-for-elementor' );
+			$required['dce_visibility_special'] = true;
 
 			$callable_functions = array_filter( $settings['dce_visibility_special'], function ( $function ) {
 				return in_array( $function, array_keys( self::get_whitelist_page_functions() ), true ) && is_callable( $function );

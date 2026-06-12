@@ -60,16 +60,18 @@ class Device extends Base {
 	 * @param array<string,mixed> $settings
 	 * @param array<string,mixed> &$triggers
 	 * @param array<string,mixed> &$conditions
+	 * @param array<string,mixed> &$required
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	public function check_conditions( $settings, &$triggers, &$conditions, $element ) {
+	public function check_conditions( $settings, &$triggers, &$conditions, &$required, $element ) {
 		if ( ! isset( $settings['dce_visibility_device'] ) || ! $settings['dce_visibility_device'] ) {
 			$ahidden = false;
 
 			// responsive
 			if ( isset( $settings['dce_visibility_responsive'] ) && $settings['dce_visibility_responsive'] ) {
 				$triggers['dce_visibility_responsive'] = esc_html__( 'Responsive', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_responsive'] = true;
 
 				if ( wp_is_mobile() ) {
 					if ( $settings['dce_visibility_responsive'] == 'mobile' ) {
@@ -85,6 +87,7 @@ class Device extends Base {
 			// browser
 			if ( isset( $settings['dce_visibility_browser'] ) && is_array( $settings['dce_visibility_browser'] ) && ! empty( $settings['dce_visibility_browser'] ) ) {
 				$triggers['dce_visibility_browser'] = esc_html__( 'Browser', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_browser'] = true;
 
 				$is_browser = false;
 				$allowed_browsers = [ 'is_chrome', 'is_gecko', 'is_safari', 'is_IE', 'is_edge', 'is_NS4', 'is_opera', 'is_lynx', 'is_iphone' ];

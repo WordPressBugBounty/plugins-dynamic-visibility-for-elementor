@@ -32,6 +32,7 @@ class MyFastApp extends Base {
 					'app' => esc_html__( 'in the app', 'dynamic-visibility-for-elementor' ),
 				],
 				'default' => 'all',
+				'description' => esc_html__( 'Note: the app context is reported by the visitor and can be faked, so use it as a hint only, never to protect sensitive content.', 'dynamic-visibility-for-elementor' ),
 			]
 		);
 	}
@@ -40,14 +41,16 @@ class MyFastApp extends Base {
 	 * @param array<string,mixed> $settings
 	 * @param array<string,mixed> &$triggers
 	 * @param array<string,mixed> &$conditions
+	 * @param array<string,mixed> &$required
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	public function check_conditions( $settings, &$triggers, &$conditions, $element ) {
+	public function check_conditions( $settings, &$triggers, &$conditions, &$required, $element ) {
 		if ( isset( $settings['dce_visibility_myfastapp'] ) &&
 			'all' !== $settings['dce_visibility_myfastapp'] ) {
 
 			$triggers['dce_visibility_myfastapp'] = 'My FastAPP';
+			$required['dce_visibility_myfastapp'] = true;
 
 			$headers = getallheaders();
 			$is_on_myfastapp = isset( $headers['X-Appid'] ) || isset( $_COOKIE['myfastapp-cli'] );

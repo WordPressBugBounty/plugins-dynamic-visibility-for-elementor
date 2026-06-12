@@ -103,12 +103,14 @@ class WooCommerce extends Base {
 	 * @param array<string,mixed> $settings
 	 * @param array<string,mixed> &$triggers
 	 * @param array<string,mixed> &$conditions
+	 * @param array<string,mixed> &$required
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	public function check_conditions( $settings, &$triggers, &$conditions, $element ) {
+	public function check_conditions( $settings, &$triggers, &$conditions, &$required, $element ) {
 		if ( 'select' !== $settings['dce_visibility_woo_cart'] ) {
 			$triggers['dce_visibility_woo_cart'] = esc_html__( 'Cart is', 'dynamic-visibility-for-elementor' );
+			$required['dce_visibility_woo_cart'] = true;
 			$cart_is_empty = WC()->cart->get_cart_contents_count() === 0;
 			if ( 'empty' === $settings['dce_visibility_woo_cart'] && $cart_is_empty
 				|| 'not_empty' === $settings['dce_visibility_woo_cart'] && ! $cart_is_empty ) {
@@ -118,6 +120,7 @@ class WooCommerce extends Base {
 
 		if ( ! empty( $settings['dce_visibility_woo_product_type'] ) && 'select' !== $settings['dce_visibility_woo_product_type'] ) {
 			$triggers['dce_visibility_woo_product_type'] = esc_html__( 'Product Type is', 'dynamic-visibility-for-elementor' );
+			$required['dce_visibility_woo_product_type'] = true;
 			$product = wc_get_product( get_the_ID() );
 			if ( $product && $product->is_type( $settings['dce_visibility_woo_product_type'] ) ) {
 				$conditions['dce_visibility_woo_product_type'] = esc_html__( 'Product Type is', 'dynamic-visibility-for-elementor' );
@@ -126,6 +129,7 @@ class WooCommerce extends Base {
 
 		if ( ! empty( $settings['dce_visibility_woo_product_id_static'] ) ) {
 			$triggers['dce_visibility_woo_product_id_static'] = esc_html__( 'Product in the cart', 'dynamic-visibility-for-elementor' );
+			$required['dce_visibility_woo_product_id_static'] = true;
 			$product_id = $settings['dce_visibility_woo_product_id_static'];
 			$product_cart_id = WC()->cart->generate_cart_id( $product_id );
 			$in_cart = WC()->cart->find_product_in_cart( $product_cart_id );
@@ -136,6 +140,7 @@ class WooCommerce extends Base {
 
 		if ( ! empty( $settings['dce_visibility_woo_product_category'] ) ) {
 			$triggers['dce_visibility_woo_product_category'] = esc_html__( 'Product Category in the cart', 'dynamic-visibility-for-elementor' );
+			$required['dce_visibility_woo_product_id_static'] = true;
 
 			foreach ( WC()->cart->get_cart() as $cart_item_key => $cart_item ) {
 				if ( has_term( $settings['dce_visibility_woo_product_category'], 'product_cat', $cart_item['product_id'] ) ) {
@@ -148,6 +153,7 @@ class WooCommerce extends Base {
 		if ( Helper::is_plugin_active( 'woocommerce-memberships' ) ) {
 			if ( $settings['dce_visibility_woo_membership_post'] ) {
 				$triggers['dce_visibility_woo_membership_post'] = esc_html__( 'Woo Membership Post', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_woo_membership_post'] = true;
 
 				if ( function_exists( 'wc_memberships_is_user_active_or_delayed_member' ) ) {
 
@@ -196,6 +202,7 @@ class WooCommerce extends Base {
 				//roles
 				if ( isset( $settings['dce_visibility_woo_membership'] ) && ! empty( $settings['dce_visibility_woo_membership'] ) ) {
 					$triggers['dce_visibility_woo_membership'] = esc_html__( 'Woo Membership', 'dynamic-visibility-for-elementor' );
+					$required['dce_visibility_woo_membership'] = true;
 
 					$current_user_id = get_current_user_id();
 					if ( $current_user_id ) {

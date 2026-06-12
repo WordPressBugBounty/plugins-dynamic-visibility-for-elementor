@@ -4,7 +4,7 @@ Tags: elementor, hide, conditional, schedule, woocommerce
 Requires at least: 5.2
 Tested up to: 7.0
 Requires PHP: 7.1
-Stable tag: 6.0.3
+Stable tag: 6.0.4
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -110,6 +110,9 @@ Please leave us a good review rating. We appreciate your support.
 5. Integrated with Elementor Navigator and Contextual Menu
 
 == Changelog ==
+
+= 6.0.4 =
+* Fix: when combining multiple conditions with AND logic, an element using a Date/Time, Period or Time range stayed hidden even when the current date or time was within the range
 
 = 6.0.3 =
 * Tweak: compatibility tags for Elementor 4.1.1 and Elementor Pro 4.1.0

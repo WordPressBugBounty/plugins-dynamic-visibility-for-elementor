@@ -74,9 +74,10 @@ class DynamicTag extends Base {
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	public function check_conditions( $settings, &$triggers, &$conditions, $element ) {
+	public function check_conditions( $settings, &$triggers, &$conditions, &$required, $element ) {
 		if ( ! empty( $settings['__dynamic__'] ) && ! empty( $settings['__dynamic__']['dce_visibility_dynamic_tag'] ) ) {
 			$triggers['dce_visibility_dynamic_tag'] = esc_html__( 'Dynamic Tag', 'dynamic-visibility-for-elementor' );
+			$required['dce_visibility_dynamic_tag'] = true;
 
 			$my_val = $settings['dce_visibility_dynamic_tag'];
 			$condition_result = Helper::is_condition_satisfied(

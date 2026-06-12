@@ -32,12 +32,14 @@ class Random extends Base {
 	 * @param array<string,mixed> $settings
 	 * @param array<string,mixed> &$triggers
 	 * @param array<string,mixed> &$conditions
+	 * @param array<string,mixed> &$required
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	public function check_conditions( $settings, &$triggers, &$conditions, $element ) {
+	public function check_conditions( $settings, &$triggers, &$conditions, &$required, $element ) {
 		if ( ! empty( $settings['dce_visibility_random']['size'] ) ) {
 			$triggers['dce_visibility_random'] = esc_html__( 'Random', 'dynamic-visibility-for-elementor' );
+			$required['dce_visibility_random'] = true;
 			$rand = mt_rand( 1, 100 );
 			if ( $rand <= $settings['dce_visibility_random']['size'] ) {
 				$conditions['dce_visibility_random'] = esc_html__( 'Random', 'dynamic-visibility-for-elementor' );

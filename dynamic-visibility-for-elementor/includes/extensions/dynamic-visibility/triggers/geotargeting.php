@@ -65,14 +65,16 @@ class Geotargeting extends Base {
 	 * @param array<string,mixed> $settings
 	 * @param array<string,mixed> &$triggers
 	 * @param array<string,mixed> &$conditions
+	 * @param array<string,mixed> &$required
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	public function check_conditions( $settings, &$triggers, &$conditions, $element ) {
+	public function check_conditions( $settings, &$triggers, &$conditions, &$required, $element ) {
 		if ( ! empty( $settings['dce_visibility_country'] ) ) {
 			$triggers['dce_visibility_country'] = esc_html__( 'Country', 'dynamic-visibility-for-elementor' );
 			if ( ! \Elementor\Plugin::$instance->editor->is_edit_mode() ) {
 				$geoinfo = geoip_detect2_get_info_from_current_ip();
+				$required['dce_visibility_country'] = true;
 				if ( in_array( $geoinfo->country->isoCode, $settings['dce_visibility_country'] ) ) {
 					$conditions['dce_visibility_country'] = esc_html__( 'Country', 'dynamic-visibility-for-elementor' );
 				}
@@ -86,6 +88,7 @@ class Geotargeting extends Base {
 				$ucity = array_map( 'strtolower', $geoinfo->city->names );
 				$scity = Helper::str_to_array( ',', $settings['dce_visibility_city'], 'strtolower' );
 				$icity = array_intersect( $ucity, $scity );
+				$required['dce_visibility_country'] = true;
 				if ( ! empty( $icity ) ) {
 					$conditions['dce_visibility_country'] = esc_html__( 'City', 'dynamic-visibility-for-elementor' );
 				}

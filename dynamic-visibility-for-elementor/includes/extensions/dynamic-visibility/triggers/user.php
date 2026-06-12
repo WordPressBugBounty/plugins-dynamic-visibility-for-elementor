@@ -175,15 +175,17 @@ class User extends Base {
 	 * @param array<string,mixed> $settings
 	 * @param array<string,mixed> &$triggers
 	 * @param array<string,mixed> &$conditions
+	 * @param array<string,mixed> &$required
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	public function check_conditions( $settings, &$triggers, &$conditions, $element ) {
+	public function check_conditions( $settings, &$triggers, &$conditions, &$required, $element ) {
 		if ( ! isset( $settings['dce_visibility_everyone'] ) || ! $settings['dce_visibility_everyone'] ) {
 
 			//roles
 			if ( isset( $settings['dce_visibility_role'] ) && ! empty( $settings['dce_visibility_role'] ) ) {
 				$triggers['dce_visibility_role'] = esc_html__( 'User Role', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_role'] = true;
 				$current_user = wp_get_current_user();
 				if ( $current_user->ID ) {
 					$user_roles = $current_user->roles; // An user could have multiple roles
@@ -209,6 +211,7 @@ class User extends Base {
 			// user
 			if ( isset( $settings['dce_visibility_users'] ) && $settings['dce_visibility_users'] ) {
 				$triggers['dce_visibility_users'] = esc_html__( 'Specific User', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_users'] = true;
 
 				$users = Helper::str_to_array( ',', $settings['dce_visibility_users'] );
 				$is_user = false;
@@ -237,6 +240,7 @@ class User extends Base {
 
 			if ( isset( $settings['dce_visibility_can'] ) && $settings['dce_visibility_can'] ) {
 				$triggers['dce_visibility_can'] = esc_html__( 'User can', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_can'] = true;
 
 				$user_can = false;
 				$user_id = get_current_user_id();
@@ -252,6 +256,7 @@ class User extends Base {
 				$sensitive_fields = [ 'user_pass', 'pass', 'user_activation_key', 'activation_key' ];
 				if ( ! in_array( $settings['dce_visibility_usermeta'], $sensitive_fields, true ) ) {
 					$triggers['dce_visibility_usermeta'] = esc_html__( 'User Field', 'dynamic-visibility-for-elementor' );
+					$required['dce_visibility_usermeta'] = true;
 
 					$current_user = wp_get_current_user();
 					if ( Helper::is_validated_user_meta( $settings['dce_visibility_usermeta'] ) ) {
@@ -271,6 +276,7 @@ class User extends Base {
 				$triggers['dce_visibility_referrer_list'] = esc_html__( 'Referer', 'dynamic-visibility-for-elementor' );
 
 				if ( $_SERVER['HTTP_REFERER'] ) {
+					$required['dce_visibility_referrer_list'] = true;
 					$raw_referer = sanitize_text_field( wp_unslash( $_SERVER['HTTP_REFERER'] ) );
 					$referrer = parse_url( $raw_referer, PHP_URL_HOST );
 					$referrers = explode( PHP_EOL, $settings['dce_visibility_referrer_list'] );
@@ -299,6 +305,7 @@ class User extends Base {
 
 			if ( isset( $settings['dce_visibility_ip'] ) && $settings['dce_visibility_ip'] ) {
 				$triggers['dce_visibility_ip'] = esc_html__( 'Remote IP', 'dynamic-visibility-for-elementor' );
+				$required['dce_visibility_ip'] = true;
 
 				$ips = explode( ',', $settings['dce_visibility_ip'] );
 				$ips = array_map( 'trim', $ips );
@@ -313,6 +320,7 @@ class User extends Base {
 			$triggers['dce_visibility_max_user'] = esc_html__( 'Max per User', 'dynamic-visibility-for-elementor' );
 			$user_id = get_current_user_id();
 			if ( $user_id ) {
+				$required['dce_visibility_max_user'] = true;
 				$dce_visibility_max_user = get_user_meta( $user_id, 'dce_visibility_max_user', true );
 				$dce_visibility_max_user_count = 0;
 				if ( ! empty( $dce_visibility_max_user[ $element->get_id() ] ) ) {

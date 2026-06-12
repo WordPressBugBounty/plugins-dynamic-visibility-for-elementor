@@ -373,9 +373,10 @@ class Manager extends ExtensionPrototype {
 
 		$conditions = $check_result['conditions'];
 		$triggers = $check_result['triggers'];
+		$required = $check_result['required'];
 
 		if ( isset( $settings['dce_visibility_logical_connective'] ) && $settings['dce_visibility_logical_connective'] === 'and' ) {
-			$triggered = ! empty( $triggers ) && count( $conditions ) === count( $triggers );
+			$triggered = ! empty( $required ) && count( $conditions ) === count( $required );
 		} else {
 			$triggered = ! empty( $conditions );
 		}

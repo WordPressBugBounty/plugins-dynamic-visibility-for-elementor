@@ -163,12 +163,14 @@ class Context extends Base {
 	 * @param array<string,mixed> $settings
 	 * @param array<string,mixed> &$triggers
 	 * @param array<string,mixed> &$conditions
+	 * @param array<string,mixed> &$required
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	public function check_conditions( $settings, &$triggers, &$conditions, $element ) {
+	public function check_conditions( $settings, &$triggers, &$conditions, &$required, $element ) {
 		if ( isset( $settings['dce_visibility_parameter'] ) && $settings['dce_visibility_parameter'] ) {
 			$triggers['dce_visibility_parameter'] = esc_html__( 'Parameter', 'dynamic-visibility-for-elementor' );
+			$required['dce_visibility_parameter'] = true;
 
 			$my_val = null;
 			switch ( $settings['dce_visibility_parameter_method'] ) {
@@ -199,6 +201,7 @@ class Context extends Base {
 		// LANGUAGES
 		if ( ! empty( $settings['dce_visibility_lang'] ) ) {
 			$triggers['dce_visibility_lang'] = esc_html__( 'Language', 'dynamic-visibility-for-elementor' );
+			$required['dce_visibility_lang'] = true;
 
 			$current_language = get_locale();
 			// WPML
@@ -226,6 +229,7 @@ class Context extends Base {
 
 		if ( ! empty( $settings['dce_visibility_max_day'] ) ) {
 			$triggers['dce_visibility_max_day'] = esc_html__( 'Max Day', 'dynamic-visibility-for-elementor' );
+			$required['dce_visibility_max_day'] = true;
 			$dce_visibility_max = get_option( 'dce_visibility_max', [] );
 			$today = date( 'Ymd' );
 			if ( isset( $dce_visibility_max[ $element->get_id() ] ) && isset( $dce_visibility_max[ $element->get_id() ]['day'] ) && isset( $dce_visibility_max[ $element->get_id() ]['day'][ $today ] ) ) {
@@ -238,6 +242,7 @@ class Context extends Base {
 		}
 		if ( ! empty( $settings['dce_visibility_max_total'] ) ) {
 			$triggers['dce_visibility_max_total'] = esc_html__( 'Max Total', 'dynamic-visibility-for-elementor' );
+			$required['dce_visibility_max_total'] = true;
 			$dce_visibility_max = get_option( 'dce_visibility_max', [] );
 			if ( isset( $dce_visibility_max[ $element->get_id() ] ) && isset( $dce_visibility_max[ $element->get_id() ]['total'] ) ) {
 				if ( $settings['dce_visibility_max_total'] >= $dce_visibility_max[ $element->get_id() ]['total'] ) {
@@ -249,6 +254,7 @@ class Context extends Base {
 		}
 
 		if ( ! empty( $settings['dce_visibility_conditional_tags_site'] ) && is_array( $settings['dce_visibility_conditional_tags_site'] ) ) {
+			$required['dce_visibility_conditional_tags_site'] = true;
 			$callable_functions = array_filter( $settings['dce_visibility_conditional_tags_site'], function ( $function ) {
 				return in_array( $function, array_keys( self::get_whitelist_site_functions() ), true ) && is_callable( $function );
 			});

@@ -165,10 +165,11 @@ class Events extends Base {
 	 * @param array<string,mixed> $settings
 	 * @param array<string,mixed> &$triggers
 	 * @param array<string,mixed> &$conditions
+	 * @param array<string,mixed> &$required
 	 * @param \Elementor\Element_Base $element
 	 * @return void
 	 */
-	public function check_conditions( $settings, &$triggers, &$conditions, $element ) {
+	public function check_conditions( $settings, &$triggers, &$conditions, &$required, $element ) {
 		// This method is intentionally left empty for the "events" trigger.
 		// Because event-based triggers (such as click or load events) are handled entirely
 		// on the client side via JavaScript, no server-side condition evaluation is necessary.
