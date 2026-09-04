@@ -153,105 +153,68 @@ class Plugin {
 	/**
 	 * @return bool
 	 */
-	private function is_early_access_period() {
-		$current_date = current_time( 'Y-m-d' );
-		$early_end = '2025-11-16';
-		
-		return ( $current_date <= $early_end );
-	}
-
-	/**
-	 * @return bool
-	 */
-	private function is_black_friday_period() {
-		$current_date = current_time( 'Y-m-d' );
-		$bf_start = '2025-11-17';
-		$bf_end = '2025-12-01';
-		
-		return ( $current_date >= $bf_start && $current_date <= $bf_end );
+	private function is_novamira_installed() {
+		return defined( 'NOVAMIRA_VERSION' );
 	}
 
 	/**
 	 * @return void
 	 */
 	public function get_promo_notice_dashboard() {
-		if ( $this->is_early_access_period() ) {
-			$this->get_early_access_notice();
+		if ( $this->is_novamira_installed() ) {
+			$this->get_dynamic_content_promo_notice();
 			return;
 		}
 
-		if ( $this->is_black_friday_period() ) {
-			$this->get_black_friday_notice();
-			return;
-		}
+		$msg = sprintf(
+			__(
+				'%1$sYour AI agent builds inside your WordPress.%2$s',
+				'dynamic-visibility-for-elementor'
+			) . '<br />',
+			'<strong>',
+			'</strong>'
+		);
+		$msg .= sprintf(
+			__(
+				'Novamira gives your AI full access to PHP execution, WP-CLI commands, database queries, and file edits. Real features shipped on your dev and staging sites. %1$sDiscover Novamira &rarr;%2$s',
+				'dynamic-visibility-for-elementor'
+			),
+			'<a target="_blank" rel="noopener noreferrer" href="https://novamira.ai/?utm_source=wp-plugins&utm_campaign=dynamic-visibility&utm_medium=wp-dash-promo"><strong>',
+			'</strong></a>'
+		);
+		$msg .= '<br />';
+		$msg .= sprintf(
+			__(
+				'Want memory and expertise for your AI? Save 10&#37; on %1$sNovamira Pro%2$s with promo code %3$sVISIBILITY%4$s.',
+				'dynamic-visibility-for-elementor'
+			),
+			'<a target="_blank" rel="noopener noreferrer" href="https://novamira.ai/pro/?utm_source=wp-plugins&utm_campaign=dynamic-visibility&utm_medium=wp-dash-promo">',
+			'</a>',
+			'<strong>',
+			'</strong>'
+		);
+		$this->notices->info( $msg, 'novamira_intro' );
+	}
 
+	/**
+	 * @return void
+	 */
+	private function get_dynamic_content_promo_notice() {
 		$msg = sprintf(
 			__(
 				'%1$sBuy now Dynamic.ooo - Dynamic Content for Elementor%2$s and save 10&#37; using promo code %3$sVISIBILITY%4$s.',
 				'dynamic-visibility-for-elementor'
 			) . '<br />',
-			'<a target="_blank" href="https://www.dynamic.ooo/upgrade/visibility-to-premium?utm_source=wp-plugins&utm_campaign=plugin-uri&utm_medium=wp-dash-promo">',
+			'<a target="_blank" rel="noopener noreferrer" href="https://www.dynamic.ooo/upgrade/visibility-to-premium?utm_source=wp-plugins&utm_campaign=plugin-uri&utm_medium=wp-dash-promo">',
 			'</a>',
 			'<strong>',
 			'</strong>'
 		);
-		$msg .= sprintf(
-			__(
-				'We give you %1$sover 150 features for Elementor%2$s that will save you time and money on achieving complex results. We support ACF Free and ACF Pro, JetEngine, Meta Box, WooCommerce, WPML, Search and Filter Pro, Pods and Toolset.',
-				'dynamic-visibility-for-elementor'
-			),
-			'<strong>',
-			'</strong>'
+		$msg .= __(
+			'Get over 150 features for Elementor that save you time and money when building complex websites. Dynamic Content supports ACF Free and Pro, JetEngine, Meta Box, WooCommerce, WPML, Search & Filter Pro, Pods, and Toolset.',
+			'dynamic-visibility-for-elementor'
 		);
 		$this->notices->info( $msg, 'upgrade_10' );
-	}
-
-	/**
-	 * @return void
-	 */
-	private function get_early_access_notice() {
-		$msg = sprintf(
-			__(
-				'%1$sGet Early Access to our Black Friday Sale!%2$s',
-				'dynamic-visibility-for-elementor'
-			) . '<br />',
-			'<strong>',
-			'</strong>'
-		);
-		$msg .= sprintf(
-			__(
-				'Be the first to grab our limited-time offers and enjoy our biggest discounts of the year on Dynamic Content for Elementor. %1$sRegister now &rarr;%2$s',
-				'dynamic-visibility-for-elementor'
-			),
-			'<a target="_blank" href="https://www.dynamic.ooo/promo/black-friday-2025/?utm_source=wp-plugins&utm_campaign=black-friday-early&utm_medium=wp-dash-promo"><strong>',
-			'</strong></a>'
-		);
-		$this->notices->info( $msg, 'black_friday_early_2025' );
-	}
-
-	/**
-	 * @return void
-	 */
-	private function get_black_friday_notice() {
-		$msg = sprintf(
-			__(
-				'%1$sBlack Friday Sale!%2$s Get our biggest discounts of the year on Dynamic Content for Elementor.',
-				'dynamic-visibility-for-elementor'
-			) . '<br />',
-			'<strong>',
-			'</strong>'
-		);
-		$msg .= sprintf(
-			__(
-				'We give you %1$sover 150 features for Elementor%2$s that will save you time and money on achieving complex results. %3$sGet it now &rarr;%4$s',
-				'dynamic-visibility-for-elementor'
-			),
-			'<strong>',
-			'</strong>',
-			'<a target="_blank" href="https://www.dynamic.ooo/upgrade/visibility-to-premium?utm_source=wp-plugins&utm_campaign=black-friday&utm_medium=wp-dash-promo"><strong>',
-			'</strong></a>'
-		);
-		$this->notices->info( $msg, 'black_friday_2025' );
 	}
 
 	/**

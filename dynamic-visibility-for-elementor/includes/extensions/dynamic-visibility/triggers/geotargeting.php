@@ -100,9 +100,10 @@ class Geotargeting extends Base {
 	 * @return string|null
 	 */
 	public function get_availability_requirements_message() {
-		return sprintf(
-			__( 'You need to install the %s plugin to use this trigger.', 'dynamic-visibility-for-elementor' ),
-			'<a target="_blank" href="https://wordpress.org/plugins/geoip-detect/">GeoIP Detection</a>'
+		return str_replace(
+			'%s',
+			'<a target="_blank" href="https://wordpress.org/plugins/geoip-detect/">GeoIP Detection</a>',
+			__( 'You need to install the %s plugin to use this trigger.', 'dynamic-visibility-for-elementor' )
 		);
 	}
 }

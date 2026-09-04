@@ -245,12 +245,14 @@ class Manager {
 				[
 					'label' => '<b>' . esc_html__( 'Did you enjoy Dynamic Visibility extension?', 'dynamic-visibility-for-elementor' ) . '</b>',
 					'type' => Controls_Manager::RAW_HTML,
-					'raw' => sprintf(
+					'raw' => strtr(
 						/* translators: %1$s: opening link, %2$s: closing link, %3$s: line break */
 						esc_html__( 'Please leave us a %1$s★★★★★%2$s rating.%3$sWe really appreciate your support!', 'dynamic-visibility-for-elementor' ),
-						'<a target="_blank" href="https://wordpress.org/support/plugin/dynamic-visibility-for-elementor/reviews/?filter=5/#new-post">',
-						'</a>',
-						'<br>'
+						[
+							'%1$s' => '<a target="_blank" href="https://wordpress.org/support/plugin/dynamic-visibility-for-elementor/reviews/?filter=5/#new-post">',
+							'%2$s' => '</a>',
+							'%3$s' => '<br>',
+						]
 					),
 					'separator' => 'before',
 				]

@@ -217,7 +217,7 @@ trait Wp {
 						foreach ( $terms as $aterm ) {
 							$term_name = $aterm->name;
 							if ( $info ) {
-								$term_name .= $term_name . ' (' . $aterm->slug . ')';
+								$term_name .= ' (' . $aterm->slug . ')';
 							}
 							$tmp['options'][ $aterm->term_id ] = $term_name;
 							$flatTerms[ $aterm->term_id ] = $atax . ' > ' . $term_name;
@@ -583,6 +583,23 @@ trait Wp {
 		return $postValue;
 	}
 
+	/**
+	 * @param string $key
+	 * @return bool
+	 */
+	public static function is_protected_user_meta( $key ) {
+		global $wpdb;
+		$protected = [
+			'session_tokens',
+			'default_password_nonce',
+			'_new_email',
+			'_application_passwords',
+			$wpdb->prefix . 'capabilities',
+			$wpdb->prefix . 'user_level',
+		];
+		return in_array( $key, $protected, true );
+	}
+
 	public static function get_user_value( $user_id = null, $field = 'display_name', $single = null ) {
 		$metaValue = null;
 		if ( $user_id ) {
@@ -629,7 +646,7 @@ trait Wp {
 					}
 				}
 				// campo meta
-				if ( $metaValue === null || ! $single ) {
+				if ( ( $metaValue === null || ! $single ) && ! self::is_protected_user_meta( $field ) ) {
 					if ( metadata_exists( 'user', $user_id, $field ) ) {
 						$metaValue = get_user_meta( $user_id, $field, false );
 					}

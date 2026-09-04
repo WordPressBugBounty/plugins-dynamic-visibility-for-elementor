@@ -52,8 +52,8 @@ class MyFastApp extends Base {
 			$triggers['dce_visibility_myfastapp'] = 'My FastAPP';
 			$required['dce_visibility_myfastapp'] = true;
 
-			$headers = getallheaders();
-			$is_on_myfastapp = isset( $headers['X-Appid'] ) || isset( $_COOKIE['myfastapp-cli'] );
+			// PHP exposes the X-Appid request header as $_SERVER['HTTP_X_APPID'].
+			$is_on_myfastapp = isset( $_SERVER['HTTP_X_APPID'] ) || isset( $_COOKIE['myfastapp-cli'] );
 
 			if ( 'app' === $settings['dce_visibility_myfastapp'] && $is_on_myfastapp
 				|| 'site' === $settings['dce_visibility_myfastapp'] && ! $is_on_myfastapp ) {

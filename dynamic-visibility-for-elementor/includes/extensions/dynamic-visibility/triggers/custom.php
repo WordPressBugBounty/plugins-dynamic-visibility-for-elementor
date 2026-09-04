@@ -16,21 +16,23 @@ class Custom extends Base {
 	 */
 	public function register_controls( $element ) {
 		if ( ! Helper::is_plugin_active( 'dynamic-content-for-elementor' ) ) { //  Feature not available in FREE version
-			$content = sprintf(
+			$placeholders = [
+				'%1$s' => '<strong>',
+				'%2$s' => '</strong>',
+			];
+			$content = strtr(
 				__(
 					'%1$sUnlock 150+ powerful features%2$s including Custom PHP conditions, Dynamic Tags, Widgets, Extensions and more.',
 					'dynamic-visibility-for-elementor'
-				) . '<br />',
-				'<strong>',
-				'</strong>'
-			);
-			$content .= sprintf(
+				),
+				$placeholders
+			) . '<br />';
+			$content .= strtr(
 				__(
 					'Save 10&#37; with promo code %1$sVISIBILITY%2$s',
 					'dynamic-visibility-for-elementor'
 				),
-				'<strong>',
-				'</strong>'
+				$placeholders
 			);
 
 			$upgrade_url = 'https://www.dynamic.ooo/upgrade/visibility-to-premium?utm_source=wp-plugins&utm_campaign=custom-php&utm_medium=editor-notice';

@@ -33,6 +33,7 @@ class Helper {
 	const ALLOWED_HTML_WRAPPER_TAGS = [
 		'article',
 		'aside',
+		'button',
 		'div',
 		'footer',
 		'h1',
@@ -42,6 +43,7 @@ class Helper {
 		'h5',
 		'h6',
 		'header',
+		'li',
 		'main',
 		'nav',
 		'ol',

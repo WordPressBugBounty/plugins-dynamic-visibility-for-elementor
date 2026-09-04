@@ -504,19 +504,31 @@ class Post extends Base {
 				}
 			}
 
+			$node_enabled = isset( $settings['dce_visibility_node'] ) && $settings['dce_visibility_node'];
+			$has_parent_for_node = $node_enabled && wp_get_post_parent_id( $post_ID );
+			$needs_children = ( isset( $settings['dce_visibility_parent'] ) && $settings['dce_visibility_parent'] )
+				|| ( isset( $settings['dce_visibility_leaf'] ) && $settings['dce_visibility_leaf'] )
+				|| $has_parent_for_node;
+			$has_published_children = false;
+			if ( $needs_children ) {
+				$children = get_children( [
+					'post_parent' => $post_ID,
+					'post_type' => get_post_type(),
+					'numberposts' => 1,
+					'post_status' => 'publish',
+					'fields' => 'ids',
+					'no_found_rows' => true,
+					'update_post_meta_cache' => false,
+					'update_post_term_cache' => false,
+				] );
+				$has_published_children = ! empty( $children );
+			}
+
 			if ( isset( $settings['dce_visibility_parent'] ) && $settings['dce_visibility_parent'] ) {
 				$triggers['dce_visibility_parent'] = esc_html__( 'Post is Parent', 'dynamic-visibility-for-elementor' );
 				$required['dce_visibility_parent'] = true;
 
-				$args = [
-					'post_parent' => $post_ID,
-					'post_type' => get_post_type(),
-					'numberposts' => -1,
-					'post_status' => 'publish',
-				];
-				$children = get_children( $args );
-
-				if ( ! empty( $children ) ) {
+				if ( $has_published_children ) {
 					$conditions['dce_visibility_parent'] = esc_html__( 'Post is Parent', 'dynamic-visibility-for-elementor' );
 				}
 			}
@@ -525,15 +537,7 @@ class Post extends Base {
 				$triggers['dce_visibility_leaf'] = esc_html__( 'Post is Leaf', 'dynamic-visibility-for-elementor' );
 				$required['dce_visibility_leaf'] = true;
 
-				$args = [
-					'post_parent' => $post_ID,
-					'post_type' => get_post_type(),
-					'numberposts' => -1,
-					'post_status' => 'publish',
-				];
-				$children = get_children( $args );
-
-				if ( empty( $children ) ) {
+				if ( ! $has_published_children ) {
 					$conditions['dce_visibility_leaf'] = esc_html__( 'Post is Leaf', 'dynamic-visibility-for-elementor' );
 				}
 			}
@@ -542,15 +546,8 @@ class Post extends Base {
 				$triggers['dce_visibility_node'] = esc_html__( 'Post is Node', 'dynamic-visibility-for-elementor' );
 				$required['dce_visibility_node'] = true;
 
-				if ( wp_get_post_parent_id( $post_ID ) ) {
-					$args = [
-						'post_parent' => $post_ID,
-						'post_type' => get_post_type(),
-						'numberposts' => -1,
-						'post_status' => 'publish',
-					];
-					$children = get_children( $args );
-					if ( ! empty( $children ) ) {
+				if ( $has_parent_for_node ) {
+					if ( $has_published_children ) {
 						$parents = get_post_ancestors( $post_ID );
 						$node_level = count( $parents ) + 1;
 						if ( empty( $settings['dce_visibility_node_level'] ) || $node_level == $settings['dce_visibility_node_level'] ) {
@@ -592,8 +589,12 @@ class Post extends Base {
 					$args = [
 						'post_parent' => $post_parent_ID,
 						'post_type' => get_post_type(),
-						'posts_per_page' => -1,
+						'numberposts' => 2,
 						'post_status' => 'publish',
+						'fields' => 'ids',
+						'no_found_rows' => true,
+						'update_post_meta_cache' => false,
+						'update_post_term_cache' => false,
 					];
 					$children = get_children( $args );
 					if ( ! empty( $children ) && count( $children ) > 1 ) {
