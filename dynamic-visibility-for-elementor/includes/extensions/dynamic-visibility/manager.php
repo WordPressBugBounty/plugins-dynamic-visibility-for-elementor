@@ -103,7 +103,9 @@ class Manager extends ExtensionPrototype {
 	 * @return void
 	 */
 	public function run_once() {
-		
+		if ( class_exists( Triggers\DceRegistry::class ) ) {
+			Triggers\DceRegistry::register_unsafe_controls();
+		}
 
 		\DynamicVisibilityForElementor\Plugin::instance()->wpml->add_extensions_fields(
 			[
@@ -284,7 +286,7 @@ class Manager extends ExtensionPrototype {
 				if ( ! empty( $fallback ) ) {
 					$fallback = str_replace( 'dce-visibility-element-hidden', '', $fallback );
 					$fallback = str_replace( 'dce-visibility-original-content', 'dce-visibility-fallback-content', $fallback );
-					echo $fallback;
+					self::print_fallback_content( $fallback, $settings );
 				}
 			}
 		}
@@ -414,9 +416,10 @@ class Manager extends ExtensionPrototype {
 	public static function get_fallback_content( $settings ) {
 		if ( ! empty( $settings['dce_visibility_fallback'] ) ) {
 			if ( isset( $settings['dce_visibility_fallback_type'] ) && $settings['dce_visibility_fallback_type'] == 'template' ) {
-				
+				return class_exists( DceTemplateFallback::class ) ? DceTemplateFallback::render( $settings ) : false;
 			} else {
-				return $settings['dce_visibility_fallback_text'];
+				$text = $settings['dce_visibility_fallback_text'] ?? '';
+				return is_string( $text ) ? wp_kses_post( $text ) : '';
 			}
 		} else {
 			return false;
@@ -454,11 +457,24 @@ class Manager extends ExtensionPrototype {
 
 		ob_start();
 		$element->before_render();
-		echo $fallback_content;
+		self::print_fallback_content( $fallback_content, $settings );
 		$element->after_render();
 		$fallback_content = ob_get_clean();
 
 		return $fallback_content;
+	}
+
+	/**
+	 * @param string $content
+	 * @param array<string,mixed> $settings
+	 * @return void
+	 */
+	private static function print_fallback_content( $content, $settings ) {
+		if ( ( $settings['dce_visibility_fallback_type'] ?? '' ) === 'template' && class_exists( DceTemplateFallback::class ) ) {
+			DceTemplateFallback::print_content( $content );
+			return;
+		}
+		echo wp_kses_post( $content );
 	}
 
 	/**

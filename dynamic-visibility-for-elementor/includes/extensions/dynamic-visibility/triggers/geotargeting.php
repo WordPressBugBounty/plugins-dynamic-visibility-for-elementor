@@ -32,7 +32,7 @@ class Geotargeting extends Base {
 
 		$geoinfo = geoip_detect2_get_info_from_current_ip();
 		$countryInfo = new \YellowTree\GeoipDetect\Geonames\CountryInformation(); // @phpstan-ignore class.notFound
-		$countries = $countryInfo->getAllCountries(); // @phpstan-ignore class.notFound
+		$countries = $countryInfo->getAllCountries();
 		$element->add_control(
 			'dce_visibility_country',
 			[

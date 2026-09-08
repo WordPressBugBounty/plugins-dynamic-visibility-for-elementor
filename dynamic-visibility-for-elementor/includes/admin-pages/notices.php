@@ -49,10 +49,13 @@ class Notices {
 	}
 
 	public function action_admin_init() {
-		$dismiss_key = $_GET['dve_dismiss'] ?? false;
-		if ( is_string( $dismiss_key ) ) {
-			$dismiss_key = sanitize_text_field( $dismiss_key );
-			$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( $_GET['_wpnonce'] ) : '';
+		$dismiss_key = isset( $_GET['dve_dismiss'] ) && is_string( $_GET['dve_dismiss'] )
+			? sanitize_text_field( wp_unslash( $_GET['dve_dismiss'] ) )
+			: false;
+		if ( false !== $dismiss_key ) {
+			$nonce = isset( $_GET['_wpnonce'] ) && is_string( $_GET['_wpnonce'] )
+				? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) )
+				: '';
 			if ( ! wp_verify_nonce( $nonce, self::DB_PREFIX . $dismiss_key ) ) {
 				return;
 			}
@@ -68,27 +71,28 @@ class Notices {
 	 * @return void
 	 */
 	public static function render_notice( $message, $type, $dismiss_key = false ) {
+		$type = in_array( $type, self::TYPES, true ) ? $type : 'info';
 		$classes = "notice dce-generic-notice notice-$type";
-		$dismiss_attr = '';
-		if ( $dismiss_key ) {
+		$dismiss_url = false;
+		if ( is_string( $dismiss_key ) && '' !== $dismiss_key ) {
 			$classes .= ' dce-dismissible-notice is-dismissible';
 			$dismiss_url = wp_nonce_url( add_query_arg( array(
 				'dve_dismiss' => $dismiss_key,
 			), admin_url() ), self::DB_PREFIX . $dismiss_key );
-			$dismiss_attr .= ' data-dismiss-url="' . esc_url( $dismiss_url ) . '"';
 		}
 		$icon_url = DVE_URL . '/assets/media/dce.png';
 		$product_name_long = DVE_PRODUCT_NAME_LONG;
-		$html = <<<EOD
-<div class="$classes" $dismiss_attr>
-<div class="img-responsive pull-left">
-	<img class='dce-logo' src="$icon_url" title="$product_name_long">
-</div>
-<p><strong>$product_name_long</strong><br />
-$message
-</div>
-EOD;
-		echo $html;
+		?>
+		<div class="<?php echo esc_attr( $classes ); ?>"<?php if ( $dismiss_url ) : ?> data-dismiss-url="<?php echo esc_url( $dismiss_url ); ?>"<?php endif; ?>>
+			<div class="img-responsive pull-left">
+				<img class="dce-logo" src="<?php echo esc_url( $icon_url ); ?>" title="<?php echo esc_attr( $product_name_long ); ?>" alt="<?php echo esc_attr( $product_name_long ); ?>">
+			</div>
+			<p>
+				<strong><?php echo esc_html( $product_name_long ); ?></strong><br />
+				<?php echo wp_kses_post( $message ); ?>
+			</p>
+		</div>
+		<?php
 	}
 
 	/**

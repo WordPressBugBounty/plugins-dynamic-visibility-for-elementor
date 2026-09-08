@@ -3,8 +3,8 @@
  *
  * Plugin Name: Dynamic Visibility for Elementor
  * Description: Visibility rules for widgets, containers, sections, columns or pages with advanced conditions and removing the element from the DOM.
- * Plugin URI: https://www.dynamic.ooo/widget/dynamic-visibility/?utm_source=wp-plugins&utm_campaign=plugin-uri&utm_medium=wp-dash
- * Version: 6.0.5
+ * Plugin URI: https://www.dynamic.ooo/dynamic-visibility-for-elementor?utm_source=wp-plugins&utm_campaign=plugin-uri&utm_medium=wp-dash
+ * Version: 6.0.6
  * Author: Dynamic.ooo
  * Author URI: https://www.dynamic.ooo/
  * Text Domain: dynamic-visibility-for-elementor

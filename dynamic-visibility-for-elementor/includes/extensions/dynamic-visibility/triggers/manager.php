@@ -79,24 +79,19 @@ class Manager {
 				'label' => 'WooCommerce',
 				'class' => WooCommerce::class,
 			],
-			
 			'random' => [
 				'label' => esc_html__( 'Random', 'dynamic-visibility-for-elementor' ),
 				'class' => Random::class,
-			],
-			'custom' => [
-				'label' => esc_html__( 'Custom Condition', 'dynamic-visibility-for-elementor' ),
-				'class' => Custom::class,
-			],
-			'myfastapp' => [
-				'label' => 'My FastAPP',
-				'class' => MyFastApp::class,
 			],
 			'events' => [
 				'label' => esc_html__( 'JS Events', 'dynamic-visibility-for-elementor' ),
 				'class' => Events::class,
 			],
 		];
+
+		if ( class_exists( DceRegistry::class ) ) {
+			$triggers = array_merge( $triggers, DceRegistry::get_triggers() );
+		}
 
 		/**
 		 * Filters the list of available triggers for Dynamic Visibility.
@@ -276,44 +271,14 @@ class Manager {
 			]
 		);
 
-		$element->add_control(
-			'dce_visibility_fallback_type',
-			[
-				'label' => esc_html__( 'Content type', 'dynamic-visibility-for-elementor' ),
-				'type' => Controls_Manager::CHOOSE,
-				'options' => [
-					'text' => [
-						'title' => esc_html__( 'Text', 'dynamic-visibility-for-elementor' ),
-						'icon' => 'fa fa-align-left',
-					],
-					'template' => [
-						'title' => esc_html__( 'Template', 'dynamic-visibility-for-elementor' ),
-						'icon' => 'fa fa-th-large',
-					],
-				],
+		if ( class_exists( DynamicVisibility\DceTemplateFallback::class ) ) {
+			DynamicVisibility\DceTemplateFallback::register_controls( $element );
+		} else {
+			$element->add_control( 'dce_visibility_fallback_type', [
+				'type' => Controls_Manager::HIDDEN,
 				'default' => 'text',
-				'condition' => [
-					'enabled_visibility' => 'yes',
-					'dce_visibility_fallback!' => '',
-				],
-			]
-		);
-
-		$element->add_control(
-			'dce_visibility_fallback_template',
-			[
-				'label' => esc_html__( 'Render Template', 'dynamic-visibility-for-elementor' ),
-				'type' => 'ooo_query',
-				'placeholder' => esc_html__( 'Template Name', 'dynamic-visibility-for-elementor' ),
-				'label_block' => true,
-				'query_type' => 'posts',
-				'object_type' => 'elementor_library',
-				'condition' => [
-					'dce_visibility_fallback!' => '',
-					'dce_visibility_fallback_type' => 'template',
-				],
-			]
-		);
+			] );
+		}
 
 		$element->add_control(
 			'dce_visibility_fallback_text',
@@ -344,10 +309,6 @@ class Manager {
 		$options = [];
 		foreach ( $this->triggers_list as $trigger_id => $trigger_data ) {
 			if ( $trigger_id === 'events' && $is_page_type ) {
-				continue;
-			}
-
-			if ( $trigger_id === 'myfastapp' && ! Helper::is_plugin_active( 'myfastapp' ) ) {
 				continue;
 			}
 

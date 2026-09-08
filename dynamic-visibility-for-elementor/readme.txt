@@ -4,7 +4,7 @@ Tags: elementor, hide, conditional, schedule, woocommerce
 Requires at least: 5.2
 Tested up to: 7.1
 Requires PHP: 7.1
-Stable tag: 6.0.5
+Stable tag: 6.0.6
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -112,6 +112,11 @@ Please leave us a good review rating. We appreciate your support.
 5. Integrated with Elementor Navigator and Contextual Menu
 
 == Changelog ==
+
+= 6.0.6 =
+* Tweak: improved fallback content and admin notice rendering
+* Tweak: streamlined internal visibility components
+* Minor fixes
 
 = 6.0.5 =
 * Tweak: updated tested-up-to tags for Elementor 4.2.4 and Elementor Pro 4.2.3

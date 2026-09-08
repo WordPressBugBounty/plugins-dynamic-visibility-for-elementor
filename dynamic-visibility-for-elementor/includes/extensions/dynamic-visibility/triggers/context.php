@@ -139,10 +139,8 @@ class Context extends Base {
 			$select_lang_array = array_column( weglot_get_destination_languages(), 'language_to' );
 			// Add current language
 			$select_lang_array[] = weglot_get_current_language();
-			if ( ! empty( $select_lang_array ) ) {
-				foreach ( $select_lang_array as $key => $value ) {
-					$select_lang[ $value ] = $value;
-				}
+			foreach ( $select_lang_array as $key => $value ) {
+				$select_lang[ $value ] = $value;
 			}
 		}
 		if ( ! empty( $select_lang ) ) {
