@@ -16,7 +16,7 @@ trait ElementLookup {
 			// find element settings (because it may not be on post, but in a template)
 			global $wpdb;
 			$table = $wpdb->prefix . 'postmeta';
-			$query = $wpdb->prepare( "SELECT post_id FROM {$table} WHERE meta_key LIKE %s AND meta_value LIKE %s", '_elementor_data', '%"id":"' . $wpdb->esc_like( $element_id ) . '",%' );
+			$query = $wpdb->prepare( "SELECT post_id FROM {$table} WHERE meta_key LIKE %s AND meta_value LIKE %s", '_elementor_data', '%"id":"' . $wpdb->esc_like( $element_id ) . '",%' ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table is the configured prefix plus the fixed postmeta suffix; values use placeholders.
 			if ( $post_id ) {
 				$query .= $wpdb->prepare( ' AND post_id = %d', $post_id );
 			} else {
@@ -25,7 +25,7 @@ trait ElementLookup {
 					WHERE post_status LIKE 'publish'
 				)";
 			}
-			$results = $wpdb->get_results( $query );
+			$results = $wpdb->get_results( $query ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Variable values are prepared above; the remaining clause uses only fixed SQL and the configured table prefix.
 			if ( ! empty( $results ) ) {
 				$result = reset( $results );
 				$ext_post_id = reset( $result );

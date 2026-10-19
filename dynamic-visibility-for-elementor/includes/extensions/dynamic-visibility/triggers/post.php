@@ -607,7 +607,6 @@ class Post extends Base {
 				$triggers['dce_visibility_friend'] = esc_html__( 'Post has Friends', 'dynamic-visibility-for-elementor' );
 				$required['dce_visibility_friend'] = true;
 
-				$posts_ids = [];
 				if ( $settings['dce_visibility_friend_term'] ) {
 					$term = get_term( $settings['dce_visibility_friend_term'] );
 					$terms = is_wp_error( $term ) ? [] : [ $term ];
@@ -638,13 +637,32 @@ class Post extends Base {
 							'suppress_filters' => false,
 						];
 						/** @var array{posts_per_page:int,post_type:string,tax_query:array{array{taxonomy:string,field:string,terms:int}},suppress_filters:bool} $post_args */
-						$term_posts = get_posts( $post_args );
-						if ( ! empty( $term_posts ) && count( $term_posts ) > 1 ) {
-							$posts_ids = wp_list_pluck( $term_posts, 'ID' );
-							if ( in_array( $post_ID, $posts_ids ) ) {
+						
+						if ( $this->has_custom_post_result_filters() ) {
+							$term_posts = get_posts( $post_args );
+							if ( count( $term_posts ) > 1 && in_array( $post_ID, wp_list_pluck( $term_posts, 'ID' ) ) ) {
 								$conditions['dce_visibility_friend'] = esc_html__( 'Post has Friends', 'dynamic-visibility-for-elementor' );
 								break;
 							}
+							continue;
+						}
+
+						$post_args['posts_per_page'] = 1;
+						$post_args['fields'] = 'ids';
+						$post_args['update_post_meta_cache'] = false;
+						$post_args['update_post_term_cache'] = false;
+
+						
+						$current_post_args = $post_args;
+						$current_post_args['post__in'] = [ (int) $post_ID ];
+						if ( ! in_array( (int) $post_ID, get_posts( $current_post_args ), true ) ) {
+							continue;
+						}
+
+						$post_args['post__not_in'] = [ (int) $post_ID ];
+						if ( ! empty( get_posts( $post_args ) ) ) {
+							$conditions['dce_visibility_friend'] = esc_html__( 'Post has Friends', 'dynamic-visibility-for-elementor' );
+							break;
 						}
 					}
 				}
@@ -703,6 +721,29 @@ class Post extends Base {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Whether result filters require the complete post list for the friends check.
+	 *
+	 * @return bool
+	 */
+	private function has_custom_post_result_filters() {
+		if ( has_filter( 'posts_results' ) ) {
+			return true;
+		}
+		global $wp_filter;
+		if ( isset( $wp_filter['the_posts'] ) ) {
+			foreach ( $wp_filter['the_posts']->callbacks as $callbacks ) {
+				foreach ( $callbacks as $callback ) {
+					
+					if ( '_close_comments_for_old_posts' !== $callback['function'] ) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	/**

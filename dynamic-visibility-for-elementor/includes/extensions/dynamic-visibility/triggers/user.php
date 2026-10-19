@@ -6,6 +6,7 @@ namespace DynamicVisibilityForElementor\Extensions\DynamicVisibility\Triggers;
 
 use Elementor\Controls_Manager;
 use DynamicVisibilityForElementor\Helper;
+use DynamicVisibilityForElementor\UserFieldPolicy;
 
 class User extends Base {
 
@@ -253,13 +254,12 @@ class User extends Base {
 			}
 
 			if ( isset( $settings['dce_visibility_usermeta'] ) && ! empty( $settings['dce_visibility_usermeta'] ) ) {
-				$sensitive_fields = [ 'user_pass', 'pass', 'user_activation_key', 'activation_key' ];
-				if ( ! in_array( $settings['dce_visibility_usermeta'], $sensitive_fields, true ) ) {
+				if ( ! in_array( $settings['dce_visibility_usermeta'], UserFieldPolicy::SECRET_USER_FIELDS, true ) ) {
 					$triggers['dce_visibility_usermeta'] = esc_html__( 'User Field', 'dynamic-visibility-for-elementor' );
 					$required['dce_visibility_usermeta'] = true;
 
 					$current_user = wp_get_current_user();
-					if ( Helper::is_validated_user_meta( $settings['dce_visibility_usermeta'] ) ) {
+					if ( Helper::is_user_meta( $settings['dce_visibility_usermeta'] ) ) {
 						$usermeta = get_user_meta( $current_user->ID, $settings['dce_visibility_usermeta'], true ); // false for visitor
 					} else {
 						$usermeta = $current_user->{$settings['dce_visibility_usermeta']};
@@ -275,9 +275,9 @@ class User extends Base {
 			if ( isset( $settings['dce_visibility_referrer'] ) && $settings['dce_visibility_referrer'] && $settings['dce_visibility_referrer_list'] ) {
 				$triggers['dce_visibility_referrer_list'] = esc_html__( 'Referer', 'dynamic-visibility-for-elementor' );
 
-				if ( $_SERVER['HTTP_REFERER'] ) {
+				$raw_referer = isset( $_SERVER['HTTP_REFERER'] ) && is_string( $_SERVER['HTTP_REFERER'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '';
+				if ( $raw_referer ) {
 					$required['dce_visibility_referrer_list'] = true;
-					$raw_referer = sanitize_text_field( wp_unslash( $_SERVER['HTTP_REFERER'] ) );
 					$referrer = parse_url( $raw_referer, PHP_URL_HOST );
 					$referrers = explode( PHP_EOL, $settings['dce_visibility_referrer_list'] );
 					$referrers = array_map( 'trim', $referrers );

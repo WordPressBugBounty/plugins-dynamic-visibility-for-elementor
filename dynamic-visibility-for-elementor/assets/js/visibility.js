@@ -1,6 +1,16 @@
 "use strict";
 
 (() => {
+	const findBySelector = (selector) => {
+		if (typeof selector !== "string" || !selector.trim()) {
+			return jQuery();
+		}
+		try {
+			return jQuery(document).find(selector);
+		} catch (err) {
+			return jQuery();
+		}
+	};
 	const initVisibility = ($e) => {
 		const e = $e[0];
 		if (
@@ -20,7 +30,7 @@
 		const isToggle = settings.dce_visibility_click_toggle === "yes";
 		const showOnLoadDelay = settings.dce_visibility_load_delay;
 		const showOnLoadAnimation = settings.dce_visibility_load_show;
-		const $hideOther = jQuery(hideOther).not($e);
+		const $hideOther = findBySelector(hideOther).not($e);
 		const transitionDelay = settings.dce_visibility_event_transition_delay;
 		// Will become true if there this trigger element is already in charge
 		// of hiding the same others. Do not do it twice:
@@ -116,7 +126,7 @@
 		};
 
 		if (triggerElement) {
-			let $triggerElement = jQuery(triggerElement);
+			let $triggerElement = findBySelector(triggerElement);
 			if (hideOther) {
 				handleHideOthers($triggerElement);
 			}

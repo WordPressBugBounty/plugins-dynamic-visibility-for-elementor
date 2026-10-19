@@ -36,6 +36,10 @@ class SharedModule extends Base_Module {
 		];
 	}
 
+	/**
+	 * @param array<string,mixed> $data
+	 * @return array<string,mixed>
+	 */
 	public function ajax_call_filter_autocomplete( array $data ) {
 		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
 			throw new \Exception( 'Access denied.' );
@@ -52,6 +56,10 @@ class SharedModule extends Base_Module {
 		return [ 'results' => $this->{$handlers[ $query_type ]}( $data ) ];
 	}
 
+	/**
+	 * @param array<string,mixed> $request
+	 * @return array<int|string,mixed>
+	 */
 	public function ajax_call_control_value_titles( $request ) {
 		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
 			throw new \Exception( 'Access denied.' );
@@ -85,6 +93,10 @@ class SharedModule extends Base_Module {
 		add_action( 'elementor/ajax/register_actions', [ $this, 'register_ajax_actions' ] );
 	}
 
+	/**
+	 * @param array<string,mixed> $data
+	 * @return array<int,array<string,string>>
+	 */
 	protected function get_fields( $data ) {
 		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
 			throw new \Exception( 'Access denied.' );
@@ -123,6 +135,10 @@ class SharedModule extends Base_Module {
 		return $results;
 	}
 
+	/**
+	 * @param array<string,mixed> $data
+	 * @return array<int,array<string,string>>
+	 */
 	protected function get_metas( $data ) {
 		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
 			throw new \Exception( 'Access denied.' );
@@ -153,6 +169,10 @@ class SharedModule extends Base_Module {
 		return $results;
 	}
 
+	/**
+	 * @param array<string,mixed> $data
+	 * @return array<int,array<string,mixed>>
+	 */
 	protected function get_posts( $data ) {
 		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
 			throw new \Exception( 'Access denied.' );
@@ -171,6 +191,9 @@ class SharedModule extends Base_Module {
 		}
 		$query = new \WP_Query( $query_params );
 		foreach ( $query->posts as $post ) {
+			if ( ! $post instanceof \WP_Post ) {
+				continue;
+			}
 			$post_title = $post->post_title;
 			if ( empty( $data['object_type'] ) || $object_type == 'any' ) {
 				$post_title = '[' . $post->ID . '] ' . $post_title . ' (' . $post->post_type . ')';
@@ -189,6 +212,10 @@ class SharedModule extends Base_Module {
 		return $results;
 	}
 
+	/**
+	 * @param array<string,mixed> $data
+	 * @return array<int,array<string,mixed>>
+	 */
 	protected function get_terms( $data ) {
 		if ( ! current_user_can( Editor::EDITING_CAPABILITY ) ) {
 			throw new \Exception( 'Access denied.' );
@@ -202,11 +229,19 @@ class SharedModule extends Base_Module {
 			'hide_empty' => false,
 		];
 		$terms = get_terms( $query_params );
+		if ( is_wp_error( $terms ) || ! is_array( $terms ) ) {
+			return $results;
+		}
 		foreach ( $terms as $term ) {
+			if ( ! $term instanceof \WP_Term ) {
+				continue;
+			}
 			$term_name = $term->name;
 			if ( empty( $data['object_type'] ) ) {
 				$taxonomy = get_taxonomy( $term->taxonomy );
-				$term_name = $taxonomy->labels->singular_name . ': ' . $term_name;
+				if ( $taxonomy instanceof \WP_Taxonomy ) {
+					$term_name = $taxonomy->labels->singular_name . ': ' . $term_name;
+				}
 			}
 			$results[] = [
 				'id' => $term->term_id,
@@ -229,8 +264,8 @@ class SharedModule extends Base_Module {
 
 		$all_capabilities = [];
 		foreach ( wp_roles()->roles as $role ) {
-			foreach ( array_keys( $role['capabilities'] ?? [] ) as $cap ) {
-				$all_capabilities[ $cap ] = $cap;
+			foreach ( ( $role['capabilities'] ?? [] ) as $cap => $granted ) {
+				$all_capabilities[ $cap ] = (string) $cap;
 			}
 		}
 
@@ -244,15 +279,14 @@ class SharedModule extends Base_Module {
 		// Sort alphabetically
 		ksort( $all_capabilities );
 
-		return array_map(
-			function ( $cap ) {
-				return [
-					'id' => $cap,
-					'text' => esc_attr( $cap ),
-				];
-			},
-			array_keys( $all_capabilities )
-		);
+		$titles = [];
+		foreach ( $all_capabilities as $cap => $label ) {
+			$titles[] = [
+				'id' => (string) $cap,
+				'text' => esc_attr( (string) $cap ),
+			];
+		}
+		return $titles;
 	}
 
 	/**
@@ -327,11 +361,12 @@ class SharedModule extends Base_Module {
 			throw new \Exception( 'Access denied.' );
 		}
 
-		$ids = (array) $request['id'];
+		$id_value = $request['id'];
+		$ids = is_array( $id_value ) ? array_values( $id_value ) : [ $id_value ];
 		$results = [];
 		$is_ctp = false;
 		if ( ! empty( $ids ) ) {
-			$first = reset( $ids );
+			$first = $ids[ array_key_first( $ids ) ];
 			$is_ctp = ! is_numeric( $first );
 		}
 		if ( $is_ctp ) {
@@ -384,9 +419,11 @@ class SharedModule extends Base_Module {
 					'hide_empty' => false,
 				]);
 
-				if ( ! is_wp_error( $terms ) ) {
+				if ( ! is_wp_error( $terms ) && is_array( $terms ) ) {
 					foreach ( $terms as $term ) {
-						$results[ $term->term_id ] = sanitize_text_field( $term->name );
+						if ( $term instanceof \WP_Term ) {
+							$results[ $term->term_id ] = sanitize_text_field( $term->name );
+						}
 					}
 				}
 			}
@@ -416,9 +453,12 @@ class SharedModule extends Base_Module {
 		return $results;
 	}
 
+	/**
+	 * @param \Elementor\Core\Common\Modules\Ajax\Module $ajax_manager
+	 * @return void
+	 */
 	public function register_ajax_actions( $ajax_manager ) {
 		$ajax_manager->register_ajax_action( 'dce_query_control_value_titles', [ $this, 'ajax_call_control_value_titles' ] );
 		$ajax_manager->register_ajax_action( 'dce_query_control_filter_autocomplete', [ $this, 'ajax_call_filter_autocomplete' ] );
 	}
-
 }

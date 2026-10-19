@@ -6,11 +6,17 @@ namespace DynamicVisibilityForElementor;
 
 trait UserMetaAccess {
 
-	public static function is_validated_user_meta( $meta_name = null ) {
+	/**
+	 * Whether the name is a user meta key and not a column of the users table.
+	 *
+	 * @param string|null $meta_name
+	 * @return boolean
+	 */
+	public static function is_user_meta( $meta_name = null ) {
 		if ( ! $meta_name ) {
 			return true;
 		}
-		$not_allowed = array(
+		$user_table_columns = array(
 			'ID',
 			'user_login',
 			'user_pass',
@@ -22,9 +28,6 @@ trait UserMetaAccess {
 			'user_status',
 			'display_name',
 		);
-		if ( in_array( $meta_name, $not_allowed, true ) ) {
-			return false;
-		}
-		return true;
+		return ! in_array( $meta_name, $user_table_columns, true );
 	}
 }

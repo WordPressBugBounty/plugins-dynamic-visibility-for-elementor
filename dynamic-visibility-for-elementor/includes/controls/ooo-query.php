@@ -68,7 +68,17 @@ class Control_OOO_Query extends Control_Select2 {
 				<label for="<?php echo esc_attr( $control_uid ); ?>" class="elementor-control-title">{{{ data.label }}}</label>
 			<# } #>
 			<div class="elementor-control-input-wrapper elementor-control-dynamic-switcher-wrapper">
-				<# var multiple = ( data.multiple ) ? 'multiple' : ''; #>
+				<#
+				var multiple = ( data.multiple ) ? 'multiple' : '';
+				var dceLabelText = function( label ) {
+					label = ( null === label || undefined === label ) ? '' : String( label );
+					if ( -1 === label.indexOf( '&' ) && -1 === label.indexOf( '<' ) ) {
+						return label;
+					}
+					var doc = new DOMParser().parseFromString( label, 'text/html' );
+					return doc.documentElement ? doc.documentElement.textContent : '';
+				};
+				#>
 				<select id="<?php echo esc_attr( $control_uid ); ?>" class="elementor-select2 elementor-control-tag-area" type="select2" {{ multiple }} data-setting="{{ data.name }}">
 					<# _.each( data.options, function( option_title, option_value ) {
 						var value = data.controlValue;
@@ -79,7 +89,7 @@ class Control_OOO_Query extends Control_Select2 {
 							var selected = ( -1 !== value.indexOf( option_value ) ) ? 'selected' : '';
 						}
 						#>
-					<option {{ selected }} value="{{ option_value }}">{{{ option_title }}}</option>
+					<option {{ selected }} value="{{ option_value }}">{{ dceLabelText( option_title ) }}</option>
 					<# } ); #>
 				</select>
 			</div>

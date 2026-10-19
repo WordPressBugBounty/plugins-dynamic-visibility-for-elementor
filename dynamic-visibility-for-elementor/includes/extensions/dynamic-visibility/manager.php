@@ -103,10 +103,6 @@ class Manager extends ExtensionPrototype {
 	 * @return void
 	 */
 	public function run_once() {
-		if ( class_exists( Triggers\DceRegistry::class ) ) {
-			Triggers\DceRegistry::register_unsafe_controls();
-		}
-
 		\DynamicVisibilityForElementor\Plugin::instance()->wpml->add_extensions_fields(
 			[
 				'dce_visibility_fallback_text' =>

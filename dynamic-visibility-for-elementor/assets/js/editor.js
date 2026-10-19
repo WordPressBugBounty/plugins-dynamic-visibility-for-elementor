@@ -251,10 +251,18 @@ jQuery(window).on('elementor:init', function () {
                             page: params.page,
                         };
                     },
-                    cache: true
-                },
-                escapeMarkup: function escapeMarkup(markup) {
-                    return markup;
+                    cache: true,
+                    processResults: function processResults(data) {
+                        if (data && _.isArray(data.results)) {
+                            data.results = data.results.map(function (item) {
+                                if (item && item.text !== undefined) {
+                                    item.text = dce_query_label_to_text(item.text);
+                                }
+                                return item;
+                            });
+                        }
+                        return data;
+                    }
                 },
                 minimumInputLength: 2
             });
@@ -342,17 +350,39 @@ jQuery(window).on('elementor:init', function () {
         dce_update_query_btn(this);
     });
 });
+// Decode the HTML entities of a Query Control label to plain text.
+function dce_query_label_to_text(label) {
+    label = label === null || label === undefined ? '' : String(label);
+    if (label.indexOf('&') === -1 && label.indexOf('<') === -1) {
+        return label;
+    }
+    var doc = new DOMParser().parseFromString(label, 'text/html');
+    return doc.documentElement ? doc.documentElement.textContent : '';
+}
+function dce_query_btn(tooltip, href, icon) {
+    return jQuery('<div>')
+        .addClass('elementor-control-unit-1 tooltip-target dce-elementor-control-quick-edit')
+        .attr('data-tooltip', tooltip)
+        .append(
+            jQuery('<a>')
+                .attr({ href: href, target: '_blank' })
+                .addClass('dce-quick-edit-btn')
+                .append(jQuery('<i>').addClass(icon))
+        );
+}
 function dce_update_query_btn(ooo) {
     var setting = jQuery(ooo).data('setting'),
             query_type = jQuery(ooo).attr('data-query_type'),
-            object_type = jQuery(ooo).attr('data-object_type');
+            object_type = jQuery(ooo).attr('data-object_type'),
+            object_type_url = encodeURIComponent(object_type || '');
     jQuery(ooo).siblings('.dce-elementor-control-quick-edit').remove();
     if (jQuery(ooo).val() && (!jQuery.isArray(jQuery(ooo).val()) || (jQuery.isArray(jQuery(ooo).val()) && jQuery(ooo).val().length == 1))) {
-        var edit_link = '#';
+        var edit_link = '#',
+            value_url = encodeURIComponent(jQuery(ooo).val());
         switch (query_type) {
             case 'posts':
                 if (!object_type || object_type != 'type') {
-                    edit_link = ElementorConfig.home_url + '/wp-admin/post.php?post=' + jQuery(ooo).val();
+                    edit_link = ElementorConfig.home_url + '/wp-admin/post.php?post=' + value_url;
                     if (object_type == 'elementor_library') {
                         edit_link += '&action=elementor';
                     } else {
@@ -362,18 +392,18 @@ function dce_update_query_btn(ooo) {
                 break;
             case 'users':
                 if (!object_type || object_type != 'role') {
-                    edit_link = ElementorConfig.home_url + '/wp-admin/user-edit.php?user_id=' + jQuery(ooo).val();
+                    edit_link = ElementorConfig.home_url + '/wp-admin/user-edit.php?user_id=' + value_url;
                 }
                 break;
             case 'terms':
                 if (object_type) {
-                    edit_link = ElementorConfig.home_url + '/wp-admin/term.php?tag_ID=' + jQuery(ooo).val();
-                    edit_link += '&taxonomy=' + object_type;
+                    edit_link = ElementorConfig.home_url + '/wp-admin/term.php?tag_ID=' + value_url;
+                    edit_link += '&taxonomy=' + object_type_url;
                 }
                 break;
         }
         if (edit_link != '#') {
-            jQuery(ooo).parent().append('<div class="elementor-control-unit-1 tooltip-target dce-elementor-control-quick-edit" data-tooltip="Quick Edit"><a href="' + edit_link + '" target="_blank" class="dce-quick-edit-btn"><i class="eicon-pencil"></i></a></div>');
+            jQuery(ooo).parent().append(dce_query_btn('Quick Edit', edit_link, 'eicon-pencil'));
         }
     } else {
         var new_link = '#';
@@ -382,9 +412,9 @@ function dce_update_query_btn(ooo) {
                 if (!object_type || object_type != 'type') {
                     new_link = ElementorConfig.home_url + '/wp-admin/post-new.php';
                     if (object_type) {
-                        new_link += '?post_type=' + object_type;
+                        new_link += '?post_type=' + object_type_url;
                         if (object_type == 'elementor_library') {
-                            new_link = ElementorConfig.home_url + '/wp-admin/edit.php?post_type=' + object_type + '#add_new';
+                            new_link = ElementorConfig.home_url + '/wp-admin/edit.php?post_type=' + object_type_url + '#add_new';
                         }
                     }
                 }
@@ -397,12 +427,12 @@ function dce_update_query_btn(ooo) {
             case 'terms':
                 new_link = ElementorConfig.home_url + '/wp-admin/edit-tags.php';
                 if (object_type) {
-                    edit_link += '&taxonomy=' + object_type;
+                    edit_link += '&taxonomy=' + object_type_url;
                 }
                 break;
         }
         if (new_link != '#') {
-            jQuery(ooo).parent().prepend('<div class="elementor-control-unit-1 tooltip-target dce-elementor-control-quick-edit" data-tooltip="Add New"><a href="' + new_link + '" target="_blank" class="dce-quick-edit-btn"><i class="eicon-plus"></i></a></div>');
+            jQuery(ooo).parent().prepend(dce_query_btn('Add New', new_link, 'eicon-plus'));
         }
     }
 }

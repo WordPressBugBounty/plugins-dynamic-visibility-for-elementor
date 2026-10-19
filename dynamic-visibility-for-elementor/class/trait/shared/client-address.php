@@ -14,9 +14,9 @@ trait ClientAddress {
 	 *
 	 * SPDX-FileCopyrightText: 2016-2025 Elementor Team <developers@elementor.com>
 	 * SPDX-License-Identifier: GPL-3.0-or-later
-	 * 
+	 *
 	 * This function is based on ElementorPro\Core\Utils::get_client_ip()
-	 * from Elementor Pro v3.29.0 and adapted for use in Dynamic Content 
+	 * from Elementor Pro v3.29.0 and adapted for use in Dynamic Content
 	 * for Elementor on 2025-07-11 to avoid dependency.
 	 *
 	 * @return string The client's IP address
